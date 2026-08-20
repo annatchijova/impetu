@@ -112,8 +112,9 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
     (no LLM, cheap to run on a schedule) and places it as a notifying reminder - demonstrated
     turning "renovar el monotributo / abrir la pestaña de AFIP" into a calendar nudge with
     nobody talking to it.
-  - *Remaining (Phase 5 deploy):* a Cloud Scheduler job hitting a `/nudge` endpoint so it
-    fires automatically on a cadence. The logic is ready; it just needs the always-on host.
+  - *Auto-fire (DONE on deploy):* Cloud Scheduler job `impetu-nudge` (daily 10:00
+    America/Argentina/Buenos_Aires) POSTs the `/nudge` endpoint with a shared-secret
+    header. Verified with a manual run - ÍMPETU now reaches out on a cadence, no app open.
 
 ---
 
@@ -137,8 +138,13 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
 ## Phase 5 — Ship (non-negotiable for submission)
 
 - [ ] **5a. Chat UI** (M) — a simple web chat to record the demo against.
-- [ ] **5b. Deploy to Cloud Run + live Firestore + secrets** (M) — the hosted URL the
-      hackathon requires; `GEMINI_API_KEY` via Secret Manager, not baked in.
+- [x] **5b. Deploy to Cloud Run + live Firestore + secrets** (M) — DONE. Live at
+      https://impetu-brkvglmi2a-uc.a.run.app (region us-central1). Dockerfile + ADK
+      get_fast_api_app; auth is Vertex via the runtime service account (no API key); the
+      Gmail/Calendar OAuth token is in Secret Manager (`impetu-gmail-token`) and injected
+      as `GMAIL_TOKEN_JSON`; `/nudge` protected by `NUDGE_TOKEN`. Verified end-to-end:
+      agent responds (Vertex), sessions persist (Firestore), and the deployed /nudge
+      created a real Calendar reminder.
 - [ ] **5c. Architecture diagram + README polish** (S) — required submission artifact.
 - [ ] **5d. ~4-min demo video + Devpost submission** (M) — problem, value, live run,
       Google Cloud proof; category selected; repo shared with required emails.

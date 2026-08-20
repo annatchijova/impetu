@@ -1,0 +1,14 @@
+# Keep secrets and local cruft out of the Cloud Build upload.
+.git
+.env
+gmail_token.json
+client_secret.json
+__pycache__/
+**/__pycache__/
+.adk/
+**/.adk/
+*.pyc
+node_modules/
+.venv/
+venv/
+.DS_Store
