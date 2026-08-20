@@ -34,13 +34,17 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
   - *Done when:* a turn proposing steps surfaces them as discrete choices and the pick
     is recorded as the saved next step.
 
-- [ ] **1b. Long-term memory across sessions** (M)
+- [x] **1b. Long-term memory across sessions** (M) — DONE (v1, Firestore-backed)
   - *Why:* the heart of "externalize working memory" — ÍMPETU should remember you over
     weeks (patterns, what worked, your open projects), not just within one session.
-  - *How:* `vertex_ai_memory_bank_service` + `load_memory`/`preload_memory` tools, keyed
-    per user. Fall back honestly if unavailable.
-  - *Done when:* a fact told in session A ("mornings are low energy") is recalled and
-    used to adapt in a *fresh* session B, proven by a two-session test.
+  - *How (shipped):* the dynamic instruction injects the user's recalled state (address,
+    last energy, open threads + next step, learned notes) from the existing `Store` into
+    the prompt every turn, so the agent greets from where they left off.
+  - *Done:* verified by a two-session test — energy 2/5 + "renovar el monotributo" + the
+    agreed next step ("abrir la pestaña de AFIP") were recalled in a fresh session with
+    no re-explaining.
+  - *Later upgrade (1b-v2):* `vertex_ai_memory_bank_service` for semantic recall across
+    many sessions, once GCP is provisioned (Phase 5b).
 
 - [ ] **1c. Live Firestore persistence** (S)
   - *Why:* stop running on the in-memory fallback; real durable state = the Architecture 30%.

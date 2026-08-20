@@ -20,29 +20,54 @@ from .tools import ALL_TOOLS, _store
 
 MODEL = os.environ.get("MODEL", "gemini-3.5-flash")
 
-_KNOWN = (
-    "\n\n# Personalization (THIS user)\n"
-    "They are addressed as: {address}. Make every gendered word agree with that. "
-    "Never use slash forms like 'bloqueado/a' - you know how they are addressed."
+_ADDR_KNOWN = (
+    "addressed as {address} - make every gendered word agree with that; never use "
+    "slash forms like 'bloqueado/a'."
 )
-_UNKNOWN = (
-    "\n\n# Personalization (THIS user)\n"
-    "You do not yet know how they want to be addressed. Until you do, use neutral "
-    "phrasing and never slash forms like 'bloqueado/a'. Early and gently, ask "
-    "whether they use él, ella, or elle; when they say, call set_address_preference."
+_ADDR_UNKNOWN = (
+    "you do not yet know how they want to be addressed. Use neutral phrasing, never "
+    "slash forms; early and gently ask whether they use él, ella, or elle, and call "
+    "set_address_preference when they tell you."
 )
+
+
+def _memory_block(recall: dict) -> str:
+    """Render what ÍMPETU already remembers, so it greets the user from there."""
+    notes = recall.get("notes") or {}
+    lines = ["\n\n# What you already remember about THIS user"]
+
+    address = notes.get("address")
+    lines.append("- Address: " + (_ADDR_KNOWN.format(address=address) if address else _ADDR_UNKNOWN))
+
+    last = recall.get("last_energy")
+    if last:
+        note = f" ({last.get('note')})" if last.get("note") else ""
+        lines.append(f"- Last energy they reported: {last.get('level')}/5{note}")
+
+    for t in (recall.get("open_tasks") or [])[:5]:
+        undone = [s for s in (t.get("steps") or []) if not s.get("done")]
+        nxt = f" -> next: {undone[-1]['text']}" if undone else ""
+        lines.append(f"- Open thread you are holding: {t.get('title', 'untitled')}{nxt}")
+
+    learned = {k: v for k, v in notes.items() if k != "address" and not k.startswith("draft:")}
+    for v in list(learned.values())[:5]:
+        lines.append(f"- Learned about them: {v}")
+
+    if recall and not recall.get("durable", True):
+        lines.append("- (Memory is in-process only right now; it will not survive a restart.)")
+
+    lines.append("Greet them from here - pick up where they left off; do not make them re-explain.")
+    return "\n".join(lines)
 
 
 def _instruction(ctx: ReadonlyContext) -> str:
-    """Inject the user's stored address preference into the prompt each turn."""
-    address = None
+    """Inject this user's remembered context into the prompt on every turn."""
     try:
         uid = ctx.state.get("user_id")
-        if uid:
-            address = _store.recall_context(uid).get("notes", {}).get("address")
+        recall = _store.recall_context(uid) if uid else {}
     except Exception:  # noqa: BLE001 - personalization is best-effort, never fatal
-        address = None
-    return SYSTEM_INSTRUCTION + (_KNOWN.format(address=address) if address else _UNKNOWN)
+        recall = {}
+    return SYSTEM_INSTRUCTION + _memory_block(recall)
 
 
 root_agent = LlmAgent(
