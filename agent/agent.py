@@ -21,6 +21,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 from google.adk.agents import LlmAgent  # noqa: E402 - must follow dotenv load
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.models.google_llm import Gemini
+from google.adk.tools import google_search
 from google.genai import types
 
 from .prompts import SYSTEM_INSTRUCTION
@@ -102,5 +103,5 @@ root_agent = LlmAgent(
         "commanded, doing the scary first 10% for you."
     ),
     instruction=_instruction,
-    tools=ALL_TOOLS,
+    tools=[*ALL_TOOLS, google_search],
 )

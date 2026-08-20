@@ -59,13 +59,15 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
 
 ## Phase 2 — Real-world action (the "scary 10%" made real)
 
-- [ ] **2a. Grounded unsticking with search** (S)
+- [x] **2a. Grounded unsticking with search** (S) — DONE
   - *Why:* turns "I don't even know the steps" into concrete ones — the agent looks up
-    the real procedure instead of hand-waving.
-  - *How:* `google_search` + `url_context` tools, used only to research steps, never to
-    replace the user's judgment.
-  - *Done when:* for a real bureaucratic task, ÍMPETU produces the actual required steps
-    with sources, then collapses to one atomic first step.
+    the real answer instead of guessing (the exact failure that surfaced when it invented
+    Defensoria email addresses from memory).
+  - *How (shipped):* added ADK's `google_search` to the agent (mixes fine with the
+    function tools in ADK 2.1). Prompt rule 9 forces search before stating any specific
+    external fact (address, deadline, procedure) - do not trust parametric memory.
+  - *Done:* verified via grounding_metadata — a lookup produced real `web_search_queries`
+    instead of a remembered guess.
 
 - [x] **2b. Real Gmail draft creation** (M) — DONE
   - *Why:* the strongest demo moment — the draft actually appears in your Gmail; opening

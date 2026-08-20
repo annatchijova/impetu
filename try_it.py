@@ -33,6 +33,9 @@ async def one_turn(text: str) -> None:
     async for event in runner.run_async(
         user_id=USER, session_id=session.id, new_message=msg
     ):
+        gm = getattr(event, "grounding_metadata", None)
+        if gm and getattr(gm, "web_search_queries", None):
+            print(f"    [google_search: {list(gm.web_search_queries)}]")
         if not event.content or not event.content.parts:
             continue
         for part in event.content.parts:
