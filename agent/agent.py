@@ -14,11 +14,28 @@ import os
 
 from google.adk.agents import LlmAgent
 from google.adk.agents.readonly_context import ReadonlyContext
+from google.adk.models.google_llm import Gemini
+from google.genai import types
 
 from .prompts import SYSTEM_INSTRUCTION
 from .tools import ALL_TOOLS, _store
 
 MODEL = os.environ.get("MODEL", "gemini-3.5-flash")
+
+# Gemini spikes to 503/429 under load; retry with exponential backoff so a
+# transient overload degrades into a short wait, not a failed turn. Failure
+# handling is a first-class concern here (hackathon Architecture criterion).
+_model = Gemini(
+    model=MODEL,
+    retry_options=types.HttpRetryOptions(
+        attempts=5,
+        initial_delay=1.0,
+        max_delay=20.0,
+        exp_base=2.0,
+        jitter=0.5,
+        http_status_codes=[429, 500, 502, 503, 504],
+    ),
+)
 
 _ADDR_KNOWN = (
     "addressed as {address} - make every gendered word agree with that; never use "
@@ -72,7 +89,7 @@ def _instruction(ctx: ReadonlyContext) -> str:
 
 root_agent = LlmAgent(
     name="impetu",
-    model=MODEL,
+    model=_model,
     description=(
         "A calm collaborative partner for autistic/ADHD minds that lowers the "
         "activation energy of starting: one atomic step at a time, negotiated not "
