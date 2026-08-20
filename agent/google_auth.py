@@ -9,6 +9,7 @@ If the token is missing or lacks a scope, callers degrade honestly.
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 
@@ -23,18 +24,35 @@ CLIENT_SECRET_PATH = os.environ.get("GMAIL_CLIENT_SECRET", str(_ROOT / "client_s
 
 
 def load_creds():
-    """Return valid OAuth credentials, or None if not connected."""
-    if not os.path.exists(TOKEN_PATH):
-        return None
+    """Return valid OAuth credentials, or None if not connected.
+
+    Reads the token from GMAIL_TOKEN_JSON (Secret Manager on Cloud Run) if set,
+    otherwise from the local file. A refreshed access token is written back only when
+    using the local file (Cloud Run's filesystem is ephemeral, and the long-lived
+    refresh token in the secret keeps working across cold starts).
+    """
     try:
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
 
-        creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
+        raw = os.environ.get("GMAIL_TOKEN_JSON")
+        if raw:
+            info = json.loads(raw)
+        elif os.path.exists(TOKEN_PATH):
+            with open(TOKEN_PATH) as f:
+                info = json.load(f)
+        else:
+            return None
+
+        creds = Credentials.from_authorized_user_info(info, SCOPES)
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
-            with open(TOKEN_PATH, "w") as f:
-                f.write(creds.to_json())
+            if not raw:
+                try:
+                    with open(TOKEN_PATH, "w") as f:
+                        f.write(creds.to_json())
+                except OSError:
+                    pass  # read-only filesystem (e.g. Cloud Run) - refresh stays in memory
         return creds if (creds and creds.valid) else None
     except Exception:  # noqa: BLE001 - a broken token must not crash a turn
         return None
