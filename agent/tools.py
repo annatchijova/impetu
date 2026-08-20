@@ -17,7 +17,7 @@ from typing import Optional
 
 from google.adk.tools import ToolContext
 
-from . import gmail
+from . import gcal, gmail
 from .state import Store
 
 # One store per process. Firestore client is cheap to hold; falls back honestly.
@@ -155,6 +155,30 @@ def draft_email(to: str, subject: str, body: str, tool_context: ToolContext) -> 
     }
 
 
+def get_today_schedule() -> dict:
+    """Read what the person already has on their calendar today.
+
+    Use this to gauge what is realistic before proposing scope - if the day is already
+    full, offer a smaller move or explicit permission to not add more. Returns the
+    events (or an honest reason if Calendar is not connected yet).
+    """
+    return gcal.list_today()
+
+
+def schedule_reminder(summary: str, when_iso: str, note: str) -> dict:
+    """Place a gentle reminder on their calendar - ONLY after they agreed to a time.
+
+    This is a normal calendar event, never a nag. Do not schedule anything they did not
+    explicitly ask for.
+
+    Args:
+        summary: short title of the reminder (their words).
+        when_iso: ISO 8601 start time, e.g. "2026-08-20T16:00:00".
+        note: optional extra context, or "".
+    """
+    return gcal.create_event(summary, when_iso, description=note or "")
+
+
 # The ordered toolset handed to the agent.
 ALL_TOOLS = [
     recall_context,
@@ -166,4 +190,6 @@ ALL_TOOLS = [
     note_what_worked,
     set_address_preference,
     draft_email,
+    get_today_schedule,
+    schedule_reminder,
 ]

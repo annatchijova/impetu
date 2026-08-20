@@ -18,7 +18,7 @@ import os
 
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-from agent.gmail import CLIENT_SECRET_PATH, SCOPES, TOKEN_PATH
+from agent.google_auth import CLIENT_SECRET_PATH, SCOPES, TOKEN_PATH
 
 
 def main() -> None:

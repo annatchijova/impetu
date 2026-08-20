@@ -79,12 +79,14 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
   - *Done:* verified end-to-end — `create_draft` returned `created=True` with a draft id
     and `drafts.list` confirmed it in the account. Sending stays a human action.
 
-- [ ] **2c. Calendar read + write** (M)
+- [x] **2c. Calendar read + write** (M) — DONE
   - *Why:* know what's realistic *today* (read the day), and externalize time by placing
     a gentle, movable reminder — not a nag.
-  - *How:* Google Calendar API (same OAuth). Read today's load; create tentative events.
-  - *Done when:* ÍMPETU can say "you already have 3 things today, want the tiniest step?"
-    and can place a reminder the user approved.
+  - *How (shipped):* `agent/gcal.py` (list_today, create_event) + tools get_today_schedule
+    and schedule_reminder. Shared OAuth (`agent/google_auth.py`) now carries both scopes
+    (gmail.compose + calendar.events) in one token; re-consented. Calendar API enabled.
+  - *Done:* verified end-to-end — read today's events and created/deleted a real event on
+    anna.tchijova. Prompt requires reminders only at a time the user explicitly agreed to.
 
 ---
 
