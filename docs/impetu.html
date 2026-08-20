@@ -1,0 +1,339 @@
+<title>ÍMPETU — what it does & how it works</title>
+<style>
+  :root {
+    --paper: #F5F3ED;
+    --panel: #FCFBF7;
+    --ink: #221E19;
+    --ink-soft: #5B544A;
+    --ink-faint: #8B8375;
+    --line: #E5DFD3;
+    --line-strong: #D6CEBE;
+    --teal: #1F5A52;
+    --teal-deep: #16433C;
+    --amber: #BE7A16;
+    --amber-soft: #F3E7CE;
+    --teal-soft: #E0EBE7;
+
+    --font-display: "Palatino Linotype", "Book Antiqua", "Iowan Old Style", Palatino, Georgia, serif;
+    --font-body: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+    --measure: 64ch;
+    --maxw: 68rem;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* language switch: English is the default even before JS runs */
+  [data-lang="es"] { display: none; }
+  body.lang-es [data-lang="en"] { display: none; }
+  body.lang-es [data-lang="es"] { display: inline; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3rem); }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin: 0 0 1rem;
+  }
+
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; }
+
+  a { color: var(--teal-deep); }
+  a:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 2px; }
+
+  /* ---------- language toggle ---------- */
+  .langswitch {
+    position: fixed; top: 1rem; right: 1rem; z-index: 20;
+    display: flex; gap: 2px;
+    background: var(--panel); border: 1px solid var(--line-strong);
+    border-radius: 999px; padding: 3px;
+    box-shadow: 0 2px 10px rgba(34,30,25,0.06);
+  }
+  .langbtn {
+    font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.06em;
+    border: none; background: transparent; color: var(--ink-soft);
+    padding: 0.32rem 0.7rem; border-radius: 999px; cursor: pointer;
+  }
+  .langbtn[aria-pressed="true"] { background: var(--teal); color: #fff; }
+  .langbtn:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  /* ---------- hero ---------- */
+  .hero { padding: clamp(3.5rem, 9vw, 6.5rem) 0 clamp(2.5rem, 6vw, 4rem); border-bottom: 1px solid var(--line); }
+  .brand {
+    font-family: var(--font-display);
+    font-size: clamp(2.9rem, 9vw, 5.2rem);
+    line-height: 0.98;
+    letter-spacing: 0.01em;
+    margin: 0.4rem 0 0;
+  }
+  .brand::after {
+    content: "";
+    display: block;
+    width: 3.5rem;
+    height: 3px;
+    margin-top: 1.4rem;
+    background: linear-gradient(90deg, var(--amber), var(--teal));
+  }
+  .lede {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    line-height: 1.32;
+    color: var(--ink);
+    max-width: 30ch;
+    margin: 1.8rem 0 0;
+  }
+  .lede em { font-style: italic; color: var(--teal-deep); }
+  .sub { max-width: var(--measure); color: var(--ink-soft); margin: 1.4rem 0 0; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: 0.6rem 0.75rem; margin-top: 2.2rem; align-items: center; }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.03em;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    color: var(--ink-soft);
+    background: var(--panel);
+  }
+  .chip a { color: inherit; text-decoration: none; }
+  .chip a:hover { color: var(--teal-deep); }
+  .chip.live { border-color: var(--teal); color: var(--teal-deep); background: var(--teal-soft); }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--teal); margin-right: 0.45rem; vertical-align: middle; }
+
+  /* ---------- sections ---------- */
+  section { padding: clamp(3rem, 7vw, 5rem) 0; border-bottom: 1px solid var(--line); }
+  .sec-head { max-width: var(--measure); margin-bottom: 2.4rem; }
+  .sec-head h2 { font-size: clamp(1.7rem, 4vw, 2.3rem); margin: 0.5rem 0 0.6rem; }
+  .sec-head p { color: var(--ink-soft); margin: 0; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .card { background: var(--panel); padding: 1.5rem 1.4rem; display: flex; flex-direction: column; gap: 0.5rem; }
+  .card .tag { font-family: var(--font-mono); font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--teal); display: flex; align-items: center; gap: 0.4rem; }
+  .card h3 { font-size: 1.22rem; margin: 0.1rem 0 0; line-height: 1.2; }
+  .card p { margin: 0; color: var(--ink-soft); font-size: 0.95rem; line-height: 1.5; }
+  .card.spark .tag { color: var(--amber); }
+  .card.spark { background: linear-gradient(180deg, var(--amber-soft) 0%, var(--panel) 60%); }
+
+  /* ---------- architecture ---------- */
+  .arch-scroll { overflow-x: auto; padding-bottom: 0.5rem; }
+  .flow { display: flex; align-items: stretch; gap: 0.75rem; min-width: max-content; }
+  .node {
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 9px;
+    padding: 0.9rem 1rem;
+    min-width: 8.5rem;
+    display: flex; flex-direction: column; gap: 0.25rem;
+  }
+  .node .k { font-family: var(--font-mono); font-size: 0.64rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+  .node .v { font-family: var(--font-display); font-size: 1.02rem; color: var(--ink); }
+  .node.brainy { border-color: var(--teal); background: var(--teal-soft); }
+  .node.act { border-color: var(--amber); background: var(--amber-soft); }
+  .arrow { align-self: center; color: var(--ink-faint); font-family: var(--font-mono); font-size: 1.1rem; flex: none; }
+
+  .loop { margin-top: 2.5rem; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--amber); border-radius: 8px; padding: 1.5rem 1.5rem; }
+  .loop h3 { margin: 0 0 0.4rem; font-size: 1.15rem; }
+  .loop p { margin: 0 0 1rem; color: var(--ink-soft); max-width: var(--measure); }
+  .loop-steps { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.6rem; font-family: var(--font-mono); font-size: 0.82rem; }
+  .loop-steps > span { padding: 0.35rem 0.6rem; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--paper); }
+  .loop-steps .arrow { padding: 0; border: none; background: none; }
+  .loop-steps b { color: var(--teal-deep); font-weight: 600; }
+  .stack { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2.2rem; }
+  .stack .s { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 6px; padding: 0.35rem 0.6rem; background: var(--panel); }
+
+  /* ---------- future ---------- */
+  .future-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.9rem; }
+  .fitem { border: 1px dashed var(--line-strong); border-radius: 9px; padding: 1.05rem 1.1rem; background: transparent; }
+  .fitem h3 { font-size: 1.05rem; margin: 0 0 0.3rem; color: var(--ink); }
+  .fitem p { margin: 0; font-size: 0.9rem; color: var(--ink-soft); line-height: 1.5; }
+
+  .principle { margin-top: 2rem; font-family: var(--font-display); font-size: clamp(1.15rem, 2.6vw, 1.5rem); font-style: italic; color: var(--teal-deep); max-width: 40ch; line-height: 1.4; }
+
+  footer { padding: 3rem 0 4rem; color: var(--ink-faint); font-size: 0.85rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 0.6rem 1.5rem; align-items: baseline; }
+  footer b { color: var(--ink-soft); font-weight: 600; }
+
+  .fade { opacity: 0; transform: translateY(10px); animation: rise 0.7s ease forwards; }
+  .fade:nth-child(2) { animation-delay: 0.06s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .fade { animation: none; opacity: 1; transform: none; } }
+</style>
+
+<div class="langswitch" role="group" aria-label="Language">
+  <button class="langbtn" data-l="en" aria-pressed="true">EN</button>
+  <button class="langbtn" data-l="es" aria-pressed="false">ES</button>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow fade"><span data-lang="en">Companion for ADHD and autistic minds · in production</span><span data-lang="es">Compañero para mentes TDAH y autistas · en producción</span></p>
+    <h1 class="brand fade">ÍMPETU</h1>
+    <p class="lede fade"><span data-lang="en">Starting is the hard problem, <em>not</em> planning. Everything ÍMPETU does exists to lower the energy of getting going.</span><span data-lang="es">Empezar es el problema difícil, <em>no</em> planificar. Todo ÍMPETU existe para bajar la energía de arranque.</span></p>
+    <p class="sub fade"><span data-lang="en">For a brain with tired executive function, the plan is never the bottleneck — starting is. ÍMPETU doesn't hand you a list: it sits beside you, breaks the task into a single step, and does the part that costs the most for you.</span><span data-lang="es">Para una cabeza con función ejecutiva cansada, el plan nunca es el cuello de botella: arrancar lo es. ÍMPETU no te da una lista: se sienta al lado, parte la tarea en un solo paso, y hace por vos el pedazo que más cuesta.</span></p>
+    <div class="meta fade">
+      <span class="chip live"><span class="dot"></span><span data-lang="en">Live on Google Cloud</span><span data-lang="es">Vivo en Google Cloud</span></span>
+      <span class="chip"><a href="https://impetu-brkvglmi2a-uc.a.run.app">impetu-brkvglmi2a-uc.a.run.app</a></span>
+      <span class="chip">Gemini 3.5 · ADK · Cloud Run</span>
+      <span class="chip">Apache-2.0</span>
+    </div>
+  </div>
+</header>
+
+<section id="today">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow"><span data-lang="en">What it does today</span><span data-lang="es">Qué hace hoy</span></p>
+      <h2><span data-lang="en">Everything it does, running in production</span><span data-lang="es">Todo lo que hace, funcionando en producción</span></h2>
+      <p><span data-lang="en">Not promises: each one is deployed and verified end to end. The two amber cards are the ones that spend the activation energy for you.</span><span data-lang="es">No son promesas: cada una está desplegada y probada de punta a punta. Las dos tarjetas en ámbar son las que gastan la energía de arranque por vos.</span></p>
+    </div>
+    <div class="grid">
+      <article class="card">
+        <span class="tag"><span class="dot"></span><span data-lang="en">Co-regulation</span><span data-lang="es">Co-regulación</span></span>
+        <h3><span data-lang="en">One step at a time, negotiated</span><span data-lang="es">Un paso a la vez, negociado</span></h3>
+        <p><span data-lang="en">Never a wall of steps, never an order. It offers the next move and you can change it or say no. It speaks to you like a capable adult — no baby-talk.</span><span data-lang="es">Nunca una pared de pasos ni una orden. Te propone el próximo movimiento y podés cambiarlo o decir que no. Te habla como a una adulta capaz, sin diminutivos.</span></p>
+      </article>
+      <article class="card spark">
+        <span class="tag"><span data-lang="en">Real action</span><span data-lang="es">Acción real</span></span>
+        <h3><span data-lang="en">Does the scary 10%</span><span data-lang="es">Hace el 10% que asusta</span></h3>
+        <p><span data-lang="en">It writes the email in your voice — short, without repeating your name — and drops it as a draft in your Gmail. You just review and send. The blank page, gone.</span><span data-lang="es">Redacta el mail en tu voz —corto, sin repetir tu nombre— y lo deja como borrador en tu Gmail. Vos solo lo revisás y lo mandás. La hoja en blanco, eliminada.</span></p>
+      </article>
+      <article class="card">
+        <span class="tag"><span data-lang="en">Memory</span><span data-lang="es">Memoria</span></span>
+        <h3><span data-lang="en">Remembers you between sessions</span><span data-lang="es">Te recuerda entre sesiones</span></h3>
+        <p><span data-lang="en">Your open tasks, your energy, what framing works for you, and how you like to be addressed. You never re-explain anything.</span><span data-lang="es">Tus tareas abiertas, tu energía, qué framing te funciona y cómo preferís que te trate. No tenés que volver a explicar nada.</span></p>
+      </article>
+      <article class="card">
+        <span class="tag"><span data-lang="en">Grounding</span><span data-lang="es">Grounding</span></span>
+        <h3><span data-lang="en">Looks up what you don't know</span><span data-lang="es">Busca lo que no sabés</span></h3>
+        <p><span data-lang="en">When a real fact is missing — an address, a deadline, a procedure — it searches the web instead of inventing it. If it can't find it, it says so.</span><span data-lang="es">Cuando falta un dato real —una dirección, un plazo, un trámite— lo busca en la web en vez de inventarlo. Si no lo encuentra, lo dice.</span></p>
+      </article>
+      <article class="card">
+        <span class="tag"><span data-lang="en">Calendar</span><span data-lang="es">Calendario</span></span>
+        <h3><span data-lang="en">Reads your day and schedules</span><span data-lang="es">Lee tu día y agenda</span></h3>
+        <p><span data-lang="en">It checks what you already have today to suggest something realistic, and creates reminders that actually reach you — popup and email, on time.</span><span data-lang="es">Mira lo que ya tenés hoy para proponerte algo realista, y crea recordatorios que te avisan de verdad —popup y mail a la hora.</span></p>
+      </article>
+      <article class="card spark">
+        <span class="tag"><span data-lang="en">Proactive</span><span data-lang="es">Proactivo</span></span>
+        <h3><span data-lang="en">It comes to you</span><span data-lang="es">Te busca a vos</span></h3>
+        <p><span data-lang="en">Every day at 10 it checks your open tasks and writes to you first — without you opening anything. An assistant that only answers isn't enough for an ADHD brain.</span><span data-lang="es">Todos los días a las 10 revisa tus tareas abiertas y te escribe solo —sin que abras nada. Un asistente que solo responde no alcanza para una cabeza TDAH.</span></p>
+      </article>
+      <article class="card">
+        <span class="tag"><span data-lang="en">Adaptation</span><span data-lang="es">Adaptación</span></span>
+        <h3><span data-lang="en">Adjusts to your energy</span><span data-lang="es">Se ajusta a tu energía</span></h3>
+        <p><span data-lang="en">It asks 1 to 5 and scales the step to the strength you have today — including explicit permission to rest, no guilt.</span><span data-lang="es">Te pregunta del 1 al 5 y escala el paso a las fuerzas que tenés hoy —incluido el permiso explícito de descansar, sin culpa.</span></p>
+      </article>
+      <article class="card">
+        <span class="tag"><span data-lang="en">Architecture</span><span data-lang="es">Arquitectura</span></span>
+        <h3><span data-lang="en">A team behind the scenes</span><span data-lang="es">Un equipo de fondo</span></h3>
+        <p><span data-lang="en">Specialized sub-agents break things down and draft behind the scenes, but you always talk to one coherent voice.</span><span data-lang="es">Sub-agentes especializados descomponen y redactan por detrás, pero vos siempre hablás con una sola voz coherente.</span></p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow"><span data-lang="en">How it works</span><span data-lang="es">Cómo funciona</span></p>
+      <h2><span data-lang="en">The agent decides; Google Cloud holds what matters</span><span data-lang="es">El agente decide; Google Cloud sostiene lo que importa</span></h2>
+      <p><span data-lang="en">Gemini reasons about your situation and picks the action. Everything consequential — your memory, your drafts, your reminders — lives in Google Cloud services, not on your machine.</span><span data-lang="es">Gemini razona sobre tu situación y elige la acción. Todo lo consecuente —tu memoria, tus borradores, tus recordatorios— vive en servicios de Google Cloud, no en tu máquina.</span></p>
+    </div>
+
+    <div class="arch-scroll">
+      <div class="flow">
+        <div class="node"><span class="k"><span data-lang="en">You</span><span data-lang="es">Vos</span></span><span class="v"><span data-lang="en">Chat / browser</span><span data-lang="es">Chat / navegador</span></span></div>
+        <span class="arrow">→</span>
+        <div class="node"><span class="k">Cloud Run</span><span class="v"><span data-lang="en">ADK server</span><span data-lang="es">Server ADK</span></span></div>
+        <span class="arrow">→</span>
+        <div class="node brainy"><span class="k">Vertex AI</span><span class="v">Gemini 3.5</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><span class="k"><span data-lang="en">Tools</span><span data-lang="es">Herramientas</span></span><span class="v"><span data-lang="en">10 + search</span><span data-lang="es">10 + búsqueda</span></span></div>
+        <span class="arrow">→</span>
+        <div class="node"><span class="k">Firestore</span><span class="v"><span data-lang="en">Memory</span><span data-lang="es">Memoria</span></span></div>
+        <span class="arrow">→</span>
+        <div class="node act"><span class="k">Gmail · Calendar</span><span class="v"><span data-lang="en">Real action</span><span data-lang="es">Acción real</span></span></div>
+      </div>
+    </div>
+
+    <div class="loop">
+      <h3><span data-lang="en">The proactive loop — ÍMPETU writes to you first</span><span data-lang="es">El bucle proactivo — ÍMPETU te escribe solo</span></h3>
+      <p><span data-lang="en">It runs entirely in Google Cloud, every day, with your computer off. That's the cycle that sent you the notification.</span><span data-lang="es">Corre entero en Google Cloud, todos los días, sin tu computadora prendida. Ese fue el ciclo que te mandó la notificación.</span></p>
+      <div class="loop-steps">
+        <span><b>Cloud Scheduler</b> · 10:00 AR</span>
+        <span class="arrow">→</span>
+        <span>Cloud Run <b>/nudge</b></span>
+        <span class="arrow">→</span>
+        <span><b>Firestore</b>: <span data-lang="en">your open task</span><span data-lang="es">tu tarea abierta</span></span>
+        <span class="arrow">→</span>
+        <span><b>Calendar</b>: <span data-lang="en">notifies you</span><span data-lang="es">te notifica</span></span>
+      </div>
+    </div>
+
+    <div class="stack">
+      <span class="s">Gemini 3.5 (Vertex AI)</span>
+      <span class="s">Google ADK</span>
+      <span class="s">Cloud Run</span>
+      <span class="s">Firestore</span>
+      <span class="s">Secret Manager</span>
+      <span class="s">Cloud Scheduler</span>
+      <span class="s">Gmail API</span>
+      <span class="s">Calendar API</span>
+    </div>
+  </div>
+</section>
+
+<section id="future">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow"><span data-lang="en">What could be added</span><span data-lang="es">Qué se puede agregar</span></p>
+      <h2><span data-lang="en">What isn't there yet — and could be</span><span data-lang="es">Lo que todavía no está —y podría estar</span></h2>
+      <p><span data-lang="en">Ideas grounded in what already exists. None of it is magic: each one builds on the architecture that already works.</span><span data-lang="es">Ideas con base en lo que ya existe. Ninguna es magia: cada una se apoya en la arquitectura que ya funciona.</span></p>
+    </div>
+    <div class="future-list">
+      <div class="fitem"><h3><span data-lang="en">Talk to it by voice</span><span data-lang="es">Hablarle por voz</span></h3><p><span data-lang="en">Say things instead of typing, when typing is the wall. Real accessibility.</span><span data-lang="es">Decirle las cosas en vez de tipear, cuando tipear es la pared. Accesibilidad real.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Read your Gmail</span><span data-lang="es">Leer tu Gmail</span></h3><p><span data-lang="en">Find a fact in your own inbox ("what was that address?") instead of you searching for it.</span><span data-lang="es">Encontrar un dato en tu propia bandeja ("¿cuál era esa dirección?") en vez de que lo busques vos.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Send, not just draft</span><span data-lang="es">Enviar, no solo redactar</span></h3><p><span data-lang="en">Send the email with your explicit confirmation, to close the loop without leaving the chat.</span><span data-lang="es">Mandar el mail con tu confirmación explícita, para cerrar el trámite sin salir del chat.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Smarter nudges</span><span data-lang="es">Nudges inteligentes</span></h3><p><span data-lang="en">Pick the moment from your patterns — when you're most receptive, not a fixed time.</span><span data-lang="es">Elegir el momento según tus patrones —a qué hora estás más receptiva, no un horario fijo.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Per-task reminders</span><span data-lang="es">Recordatorios por tarea</span></h3><p><span data-lang="en">Several cadences in parallel, one for each thing you're holding.</span><span data-lang="es">Varias cadencias en paralelo, una por cada cosa que estés sosteniendo.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Break down from a photo</span><span data-lang="es">Descomponer desde una foto</span></h3><p><span data-lang="en">Upload a photo of a form or a letter and ÍMPETU breaks it into the first step.</span><span data-lang="es">Subís la foto de un formulario o una carta y ÍMPETU la desarma en el primer paso.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Body-double mode</span><span data-lang="es">Modo body-double</span></h3><p><span data-lang="en">Stay with you through a work block, with gentle check-ins.</span><span data-lang="es">Que se quede con vos durante un bloque de trabajo, con check-ins suaves.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Its own interface</span><span data-lang="es">Interfaz propia</span></h3><p><span data-lang="en">A UI with ÍMPETU's own identity, instead of the ADK dev screen.</span><span data-lang="es">Una UI con la identidad de ÍMPETU, en vez de la pantalla de desarrollo de ADK.</span></p></div>
+      <div class="fitem"><h3><span data-lang="en">Fill the form for you</span><span data-lang="es">Que llene el formulario</span></h3><p><span data-lang="en">With computer use, operate the browser and complete the errand for you — with step-by-step permission.</span><span data-lang="es">Con computer use, que opere el navegador y complete el trámite por vos —con tu permiso paso a paso.</span></p></div>
+    </div>
+    <p class="principle"><span data-lang="en">The rule that never moves: no shame, no handing you off to crisis lines, and every action tells the truth about whether it really happened.</span><span data-lang="es">La regla que no se mueve: cero vergüenza, cero derivación a líneas de crisis, y cada acción dice la verdad de si de verdad pasó.</span></p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <b>ÍMPETU</b>
+    <span><span data-lang="en">Built for the All Things Agentic hackathon · Collaborative Partner</span><span data-lang="es">Construido para el hackathon All Things Agentic · Collaborative Partner</span></span>
+    <span><span data-lang="en">Private repository · Apache-2.0 · © 2026 Anna Tchijova</span><span data-lang="es">Repositorio privado · Apache-2.0 · © 2026 Anna Tchijova</span></span>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btns = document.querySelectorAll(".langbtn");
+    function set(l) {
+      document.body.classList.toggle("lang-es", l === "es");
+      btns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.l === l)); });
+    }
+    btns.forEach(function (b) { b.addEventListener("click", function () { set(b.dataset.l); }); });
+  })();
+</script>
