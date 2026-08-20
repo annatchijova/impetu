@@ -75,6 +75,16 @@ def create_event(summary: str, start_iso: str, end_iso: str = "", description: s
             "description": description,
             "start": {"dateTime": start_iso, "timeZone": tz},
             "end": {"dateTime": end_iso, "timeZone": tz},
+            # Active notifications: reach the person at the time, and once shortly before,
+            # so the reminder is not passive - it comes to them.
+            "reminders": {
+                "useDefault": False,
+                "overrides": [
+                    {"method": "popup", "minutes": 0},
+                    {"method": "popup", "minutes": 10},
+                    {"method": "email", "minutes": 0},
+                ],
+            },
         }
         ev = svc.events().insert(calendarId="primary", body=body).execute()
         return {"ok": True, "event_id": ev.get("id"), "link": ev.get("htmlLink")}

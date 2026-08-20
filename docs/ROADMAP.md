@@ -103,12 +103,17 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
     subject, single signature), and it composed with google_search grounding a real
     address. No tone regression; fixed the "name 4x" and feelings-narration issues.
 
-- [ ] **3b. Proactive gentle nudges** (M)
-  - *Why:* externalize time — ÍMPETU reaches out at a chosen moment ("want to keep going
-    with the papers?"), always skippable, never guilt-tripping.
-  - *How:* Cloud Scheduler → Cloud Run endpoint that runs a check-in turn; opt-in, with a
-    hard rule against nagging.
-  - *Done when:* a scheduled, user-approved nudge fires once and is trivially dismissable.
+- [~] **3b. Proactive gentle nudges** (M) — logic DONE, auto-fire needs deploy
+  - *Why:* externalize time — a passive assistant that only answers when spoken to is not
+    enough for an ADHD brain; ÍMPETU must reach out first.
+  - *Shipped + verified now:* (1) active reminders — `schedule_reminder` creates calendar
+    events with real notifications (popup at time and 10 min before, plus email), so a
+    reminder comes to the person. (2) `agent/nudge.py` composes a check-in from open tasks
+    (no LLM, cheap to run on a schedule) and places it as a notifying reminder - demonstrated
+    turning "renovar el monotributo / abrir la pestaña de AFIP" into a calendar nudge with
+    nobody talking to it.
+  - *Remaining (Phase 5 deploy):* a Cloud Scheduler job hitting a `/nudge` endpoint so it
+    fires automatically on a cadence. The logic is ready; it just needs the always-on host.
 
 ---
 
