@@ -15,10 +15,16 @@ for the sequenced plan.
 
 ```bash
 pip install -r requirements.txt          # ADK 2.1.0, firestore, fastapi, uvicorn
-export GEMINI_API_KEY=...                 # already in the maintainer's shell profile
+cp .env.example .env                      # Vertex AI config (no secrets; ADC does auth)
+gcloud auth application-default login     # once, for Vertex credentials
 python3 try_it.py "whatever you've been putting off"   # one real turn
 IMPETU_FORCE_MEMORY=1 python3 try_it.py "..."           # skip Firestore, use fallback
+adk web --port 8010 .                     # browser chat UI, pick the "agent" app
 ```
+
+Auth is **Vertex AI**, not the AI Studio API key: the free tier is 20 requests/day,
+too little for development. `.env` sets `GOOGLE_GENAI_USE_VERTEXAI=TRUE`, the project,
+and `GOOGLE_CLOUD_LOCATION=global` (Gemini 3.5 lives on the global Vertex endpoint).
 
 There is no unit-test suite yet. **Verify any change to the agent by running a real
 turn** and reading the output — do not claim it works from inspection. For prompt or

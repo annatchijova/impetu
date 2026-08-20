@@ -11,8 +11,14 @@ inject live state later; for now the static instruction carries the design.
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
-from google.adk.agents import LlmAgent
+from dotenv import load_dotenv
+
+# Load repo-root .env (Vertex config) before any Google client reads the env.
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+
+from google.adk.agents import LlmAgent  # noqa: E402 - must follow dotenv load
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.models.google_llm import Gemini
 from google.genai import types

@@ -46,10 +46,13 @@ try_it.py      local runner
 
 ## Run it locally
 
-Requires a `GEMINI_API_KEY` in your environment.
+Uses Vertex AI (Google Cloud) for real quota; the AI Studio free tier (20 req/day)
+is too small for development.
 
 ```bash
 pip install -r requirements.txt
+cp .env.example .env                    # Vertex config; no secrets, ADC handles auth
+gcloud auth application-default login   # once
 python3 try_it.py "whatever you've been putting off"
 ```
 
