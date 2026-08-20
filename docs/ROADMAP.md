@@ -46,11 +46,14 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
   - *Later upgrade (1b-v2):* `vertex_ai_memory_bank_service` for semantic recall across
     many sessions, once GCP is provisioned (Phase 5b).
 
-- [ ] **1c. Live Firestore persistence** (S)
+- [x] **1c. Live Firestore persistence** (S) — DONE
   - *Why:* stop running on the in-memory fallback; real durable state = the Architecture 30%.
-  - *How:* enable Firestore on `vigia-497422`, drop `IMPETU_FORCE_MEMORY`, confirm writes
-    land and `durable == True`.
-  - *Done when:* a task saved in one process is read back after a full restart.
+  - *How (shipped):* the `(default)` Firestore database already existed on `vigia-497422`
+    (nam5, native). Installed `google-cloud-firestore` into the user site and dropped
+    `IMPETU_FORCE_MEMORY`; the Store connects via ADC.
+  - *Done:* a task saved in one Store was read back by a fresh Store (`durable=True`), and
+    an end-to-end turn through the `adk web` server persisted `address='ella'` + the task
+    "Renovar el DNI" into real Firestore (verified, then cleaned up).
 
 ---
 
