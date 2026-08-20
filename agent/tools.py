@@ -24,11 +24,17 @@ _store = Store()
 
 
 def _user_id(tool_context: ToolContext) -> str:
+    # Prefer an explicit state value (our own server may set one), then fall back to
+    # the ADK session's user id, which every runner - including `adk web` - populates.
+    # Never invent an identity: that would mix different people's state.
     uid = tool_context.state.get("user_id")
-    if not uid:
-        # Never silently invent an identity - that would mix people's state.
-        raise ValueError("No user_id in session state; session was not initialized.")
-    return uid
+    if uid:
+        return uid
+    session = getattr(tool_context, "session", None)
+    uid = getattr(session, "user_id", None) if session is not None else None
+    if uid:
+        return uid
+    raise ValueError("No user id on the tool context; session was not initialized.")
 
 
 def recall_context(tool_context: ToolContext) -> dict:
