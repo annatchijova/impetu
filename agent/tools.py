@@ -179,6 +179,25 @@ def schedule_reminder(summary: str, when_iso: str, note: str) -> dict:
     return gcal.create_event(summary, when_iso, description=note or "")
 
 
+def search_email(query: str) -> dict:
+    """Search the person's own Gmail to find a fact they asked about.
+
+    Use this when they need something that lives in their inbox - "what was that
+    address", "when did they say the appointment was", "what did the bank ask for".
+    Search only for what they actually asked; this is read-only and never sends,
+    deletes, or changes anything. Summarize what you find; do not dump whole emails.
+
+    Args:
+        query: a Gmail search query, e.g. "Defensoria", "from:banco turno", "monotributo".
+    """
+    return gmail.search_messages(query, max_results=5)
+
+
+def read_email(message_id: str) -> dict:
+    """Read the full text of one email (by id from search_email) when a snippet is not enough."""
+    return gmail.get_message(message_id)
+
+
 # The ordered toolset handed to the agent.
 ALL_TOOLS = [
     recall_context,
@@ -190,6 +209,8 @@ ALL_TOOLS = [
     note_what_worked,
     set_address_preference,
     draft_email,
+    search_email,
+    read_email,
     get_today_schedule,
     schedule_reminder,
 ]

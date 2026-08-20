@@ -49,3 +49,73 @@ def create_draft(to: str, subject: str, body: str) -> dict:
         return {"created": True, "draft_id": draft.get("id")}
     except Exception as exc:  # noqa: BLE001 - report failure honestly, never crash
         return {"created": False, "reason": f"Gmail API error: {exc}"}
+
+
+def _extract_plain(payload: dict) -> str:
+    """Pull the plain-text body out of a Gmail message payload, recursively."""
+    if payload.get("mimeType") == "text/plain":
+        data = payload.get("body", {}).get("data")
+        if data:
+            return base64.urlsafe_b64decode(data).decode("utf-8", "replace")
+    for part in payload.get("parts", []) or []:
+        text = _extract_plain(part)
+        if text:
+            return text
+    return ""
+
+
+def search_messages(query: str, max_results: int = 5) -> dict:
+    """Search the person's own inbox. Returns matches (from, subject, date, snippet).
+
+    Read-only: this only looks; it never sends, deletes, or changes anything.
+    """
+    creds = load_creds()
+    if creds is None:
+        return {"ok": False, "reason": "Gmail not connected - re-authorize to add the read scope."}
+    try:
+        from googleapiclient.discovery import build
+
+        svc = build("gmail", "v1", credentials=creds, cache_discovery=False)
+        ids = svc.users().messages().list(userId="me", q=query, maxResults=max_results).execute()
+        results = []
+        for m in ids.get("messages", []):
+            full = (
+                svc.users()
+                .messages()
+                .get(userId="me", id=m["id"], format="metadata",
+                     metadataHeaders=["From", "Subject", "Date"])
+                .execute()
+            )
+            h = {x["name"]: x["value"] for x in full.get("payload", {}).get("headers", [])}
+            results.append({
+                "id": m["id"],
+                "from": h.get("From", ""),
+                "subject": h.get("Subject", ""),
+                "date": h.get("Date", ""),
+                "snippet": full.get("snippet", ""),
+            })
+        return {"ok": True, "count": len(results), "results": results}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "reason": f"Gmail read error (is the readonly scope authorized?): {exc}"}
+
+
+def get_message(message_id: str) -> dict:
+    """Read the full plain-text body of one message (by id from search_messages)."""
+    creds = load_creds()
+    if creds is None:
+        return {"ok": False, "reason": "Gmail not connected - re-authorize to add the read scope."}
+    try:
+        from googleapiclient.discovery import build
+
+        svc = build("gmail", "v1", credentials=creds, cache_discovery=False)
+        full = svc.users().messages().get(userId="me", id=message_id, format="full").execute()
+        h = {x["name"]: x["value"] for x in full.get("payload", {}).get("headers", [])}
+        body = _extract_plain(full.get("payload", {}))
+        return {
+            "ok": True,
+            "from": h.get("From", ""),
+            "subject": h.get("Subject", ""),
+            "body": body[:4000],
+        }
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "reason": f"Gmail read error: {exc}"}
