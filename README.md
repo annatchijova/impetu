@@ -8,53 +8,136 @@ one thesis:
 For an executive-dysfunction brain the plan is never the bottleneck; the activation
 energy to *begin* is. Every part of ÍMPETU exists to lower that energy.
 
-Built for the **All Things Agentic** hackathon (Collaborative Partner track).
+Built for the **All Things Agentic** hackathon — **Collaborative Partner** track.
+
+**Live:** https://impetu-brkvglmi2a-uc.a.run.app
+**Capabilities + architecture page:** [`docs/impetu.html`](docs/impetu.html) (bilingual, EN default)
+
+---
 
 ## What it does
 
-- **One atomic step at a time.** Never a wall of steps. If you hesitate, the step was
-  too big, so it splits again, smaller.
-- **Negotiates, never commands.** It offers and asks; you can always say no or pick
-  another step. This is deliberate: some autistic people shut down when told what to
-  do (demand avoidance).
-- **Does the scary 10% for you.** It drafts the email, writes the template, opens the
-  thing with a first ugly line already in it. You edit; you don't face a blank page.
-- **Reads and adapts to your energy.** Low battery means a tinier step, or explicit
-  permission to rest with zero guilt.
-- **Holds your working memory.** It remembers where you were and how you felt, so you
-  don't have to carry it between sessions.
-- **Adapts to you.** It learns how you want to be addressed (él / ella / elle) and
-  what kind of framing lands for you.
-- **No shame, ever, and it stays present** — it does not hand a struggling person off
-  to a hotline; it helps them take the next small, real step.
+All eight of these are deployed and verified end to end.
 
-## Architecture
+- **One step at a time, negotiated.** Never a wall of steps, never an order. It offers
+  the next move and you can change it or say no — some autistic people shut down when
+  told what to do (demand avoidance). It talks to you like a capable adult; ADHD and
+  autism are executive function, not intelligence, so no baby-talk and no infantilizing.
+- **Does the scary 10%.** It writes the email in your voice — short, without repeating
+  your name — and drops it as a real draft in your Gmail. You just review and send.
+- **Long-term memory.** It remembers your open tasks, your energy, what framing works
+  for you, and how you like to be addressed (él / ella / elle) — across sessions, so you
+  never re-explain.
+- **Looks up what you don't know.** When a real fact is missing (an address, a deadline,
+  a procedure) it searches the web instead of inventing it — and says so if it can't find it.
+- **Finds it in your inbox.** Ask "what was that address?" and it searches your own Gmail
+  to find it. Read-only: it never sends, deletes, or changes anything.
+- **Reads your day and schedules.** It checks what you already have today to keep the ask
+  realistic, and creates reminders that actually reach you (popup and email, on time).
+- **Comes to you.** A daily Cloud Scheduler job turns your open tasks into an active
+  reminder and writes to you first — no app open. A purely reactive assistant is not
+  enough for an ADHD brain.
+- **Adapts to your energy, with a team behind the scenes.** It asks 1–5 and scales the
+  step (including permission to rest, no guilt). Specialized sub-agents decompose and
+  draft in the background, but you always talk to one coherent voice.
 
-- **Agent framework:** Google ADK (`LlmAgent` + function tools).
-- **Model:** Gemini 3.5 (`MODEL` env var, default `gemini-3.5-flash`).
-- **State:** Firestore for durable "externalized working memory", with an honest
-  in-memory fallback that never pretends a write persisted.
+## How it works
+
+The **LLM is in the decision path** by design here: Gemini reasons about your situation
+and picks the action. Everything consequential — your memory, your drafts, your reminders
+— lives in Google Cloud, not on your machine.
+
+```
+You (chat / browser)
+      → Cloud Run (ADK server)
+      → Vertex AI · Gemini 3.5   (decides)
+      → tools: 10 functions + web search + 2 sub-agents
+      → Firestore (memory)  ·  Gmail + Calendar (real action)
+```
+
+**The proactive loop** — runs entirely in Google Cloud, every day, with your computer off:
+
+```
+Cloud Scheduler (10:00 AR) → Cloud Run /nudge → Firestore (your open task) → Calendar (notifies you)
+```
+
+### Tech stack (all Google Cloud)
+
+| Service | Role |
+|---|---|
+| **Gemini 3.5 (Vertex AI)** | the reasoning; picks the action |
+| **Google ADK** | agent framework — `LlmAgent`, function tools, `AgentTool` sub-agents, `google_search` grounding |
+| **Cloud Run** | hosts the agent + the `/nudge` endpoint |
+| **Firestore** | durable working memory (with an honest in-memory fallback) |
+| **Secret Manager** | the Gmail/Calendar OAuth token |
+| **Cloud Scheduler** | fires the daily proactive nudge |
+| **Gmail API · Calendar API** | real action (draft, read, schedule) |
+
+### Project layout
 
 ```
 agent/
-  prompts.py   the 8 co-regulation rules (the soul)
-  tools.py     real-action tools; each reports whether state actually persisted
-  state.py     Firestore-backed working memory + honest fallback
-  agent.py     the LlmAgent; dynamic instruction injects your address preference
-try_it.py      local runner
+  prompts.py      co-regulation rules + sub-agent instructions (the soul)
+  agent.py        root LlmAgent + decomposer/drafter sub-agents; dynamic instruction
+  tools.py        real-action tools; each reports whether its side effect happened
+  state.py        Firestore working memory + honest in-memory fallback
+  gmail.py        draft + inbox search (compose/readonly scopes; never sends)
+  gcal.py         read the day + create notifying reminders
+  google_auth.py  one OAuth token for all scopes; reads env (Secret Manager) or file
+  nudge.py        proactive check-in composed from open tasks
+server/main.py    Cloud Run app (ADK get_fast_api_app) + /nudge + /healthz
+setup_gmail.py    one-time Gmail/Calendar OAuth consent
+try_it.py         local CLI runner
+docs/impetu.html  capabilities + architecture page (bilingual)
+docs/ROADMAP.md   the build plan
 ```
 
 ## Run it locally
 
-Uses Vertex AI (Google Cloud) for real quota; the AI Studio free tier (20 req/day)
-is too small for development.
+Auth is **Vertex AI** (real quota; the AI Studio free tier of 20 req/day is too small).
 
 ```bash
 pip install -r requirements.txt
 cp .env.example .env                    # Vertex config; no secrets, ADC handles auth
 gcloud auth application-default login   # once
-python3 try_it.py "whatever you've been putting off"
+
+python3 try_it.py "whatever you've been putting off"   # one turn in the terminal
+adk web --port 8010 .                                   # or a chat UI; pick the "agent" app
 ```
+
+To enable Gmail/Calendar locally, create a **Desktop** OAuth client in the Cloud console,
+save it as `client_secret.json`, then run `python3 setup_gmail.py` once.
+
+## Deploy to Cloud Run
+
+```bash
+# One agent, one command (Vertex auth via the runtime service account — no API key):
+gcloud run deploy impetu --source . --region us-central1 --allow-unauthenticated \
+  --set-env-vars GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_PROJECT=<project>,GOOGLE_CLOUD_LOCATION=global,MODEL=gemini-3.5-flash
+
+# Gmail/Calendar token as a secret (kept out of the image):
+gcloud secrets create impetu-gmail-token --data-file=gmail_token.json
+gcloud run services update impetu --region us-central1 \
+  --set-secrets GMAIL_TOKEN_JSON=impetu-gmail-token:latest --update-env-vars NUDGE_TOKEN=<random>
+
+# Proactive nudges: a scheduled call to /nudge (protected by NUDGE_TOKEN):
+gcloud scheduler jobs create http impetu-nudge --location us-central1 \
+  --schedule "0 10 * * *" --time-zone "America/Argentina/Buenos_Aires" \
+  --uri "<service-url>/nudge?user_id=user" --http-method POST --headers "X-Nudge-Token=<random>"
+```
+
+The runtime service account needs Vertex AI User, Firestore access, and
+`secretAccessor` on the token secret.
+
+## Design principles (they never move)
+
+- **No shame, ever.** Missing a step is information, not failure. No nagging, no guilt.
+- **No crisis-hotline handoff.** A struggling person is kept company on the concrete next
+  step, not deflected to a helpline.
+- **Respect the person's intelligence.** Small steps lower activation energy; they are not
+  about capability.
+- **Honest degradation.** Every tool with a side effect reports whether it actually
+  happened — it never fakes success. No secret is ever committed to the repo.
 
 ## License
 
