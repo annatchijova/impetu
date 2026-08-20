@@ -26,8 +26,17 @@ def main() -> None:
         print(f"Missing {CLIENT_SECRET_PATH}")
         print("Create a 'Desktop app' OAuth client in the Cloud console and download it here.")
         return
+    # Fixed loopback port + no auto-open: works even with no default browser. The URL
+    # is printed so it can be opened manually; the redirect returns to localhost:PORT.
+    port = int(os.environ.get("GMAIL_OAUTH_PORT", "8766"))
     flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_PATH, SCOPES)
-    creds = flow.run_local_server(port=0)
+    creds = flow.run_local_server(
+        host="localhost",
+        port=port,
+        open_browser=False,
+        authorization_prompt_message="\n=== OPEN THIS URL TO AUTHORIZE ===\n{url}\n",
+        success_message="Impetu is connected to Gmail. You can close this tab.",
+    )
     with open(TOKEN_PATH, "w") as f:
         f.write(creds.to_json())
     print(f"Gmail connected. Token saved to {TOKEN_PATH}. draft_email now creates real drafts.")

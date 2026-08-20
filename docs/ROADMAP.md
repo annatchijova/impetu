@@ -67,13 +67,15 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
   - *Done when:* for a real bureaucratic task, ÍMPETU produces the actual required steps
     with sources, then collapses to one atomic first step.
 
-- [ ] **2b. Real Gmail draft creation** (M)
+- [x] **2b. Real Gmail draft creation** (M) — DONE
   - *Why:* the strongest demo moment — the draft actually appears in your Gmail; opening
     it is one click, not a blank page.
-  - *How:* Gmail API with **ÍMPETU's own OAuth** (separate from the claude.ai connector
-    used only for in-session testing). `draft_email` creates a real draft; never sends.
-  - *Done when:* calling `draft_email` puts an editable draft in the connected account
-    and returns its id; sending always stays a human action.
+  - *How (shipped):* `agent/gmail.py` uses the Gmail API with ÍMPETU's own OAuth
+    (gmail.compose scope, never sends). `setup_gmail.py` runs a one-time InstalledApp
+    flow (fixed loopback port, unbuffered, no auto-open) to write `gmail_token.json`.
+    `draft_email` creates a real draft when connected and degrades honestly otherwise.
+  - *Done:* verified end-to-end — `create_draft` returned `created=True` with a draft id
+    and `drafts.list` confirmed it in the account. Sending stays a human action.
 
 - [ ] **2c. Calendar read + write** (M)
   - *Why:* know what's realistic *today* (read the day), and externalize time by placing
