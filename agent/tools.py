@@ -17,6 +17,7 @@ from typing import Optional
 
 from google.adk.tools import ToolContext
 
+from . import gmail
 from .state import Store
 
 # One store per process. Firestore client is cheap to hold; falls back honestly.
@@ -129,8 +130,10 @@ def draft_email(to: str, subject: str, body: str, tool_context: ToolContext) -> 
     """Do the scary 10%: produce a real email draft they can just edit and send.
 
     You compose `body` in their voice - warm-but-brief, honest, no corporate padding.
-    This stores the draft and (in production) creates it in their Gmail so opening it
-    is one click, not a blank page. Never send automatically; they always press send.
+    This stores the draft and, when Gmail is connected, creates a real draft in their
+    Gmail so opening it is one click, not a blank page. It never sends - they always
+    press send. If Gmail is not connected, `gmail_draft_created` comes back False with a
+    reason; tell them honestly and offer the draft text so they can paste it themselves.
 
     Args:
         to: recipient (email or a plain description if unknown, e.g. "my landlord").
@@ -138,14 +141,15 @@ def draft_email(to: str, subject: str, body: str, tool_context: ToolContext) -> 
         body: the full draft text, ready to edit.
     """
     uid = _user_id(tool_context)
-    # Persist the draft as an artifact of the task work.
+    # Persist the draft as an artifact of the task work, regardless of Gmail state.
     res = _store.remember(uid, f"draft:{subject[:40]}", f"TO: {to}\nSUBJECT: {subject}\n\n{body}")
-    # TODO(gmail): create a real Gmail draft via the Gmail API / connected MCP so it
-    # lands in their drafts folder. Kept as a hook so the scaffold runs without creds.
-    gmail_created = False
+    # Create a real Gmail draft when connected; degrade honestly when not.
+    gmail_result = gmail.create_draft(to, subject, body)
     return {
         "draft": {"to": to, "subject": subject, "body": body},
-        "gmail_draft_created": gmail_created,
+        "gmail_draft_created": gmail_result.get("created", False),
+        "gmail_draft_id": gmail_result.get("draft_id"),
+        "gmail_reason": gmail_result.get("reason"),
         "persisted": res.persisted,
         "warning": res.warning,
     }
