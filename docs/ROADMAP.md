@@ -90,12 +90,16 @@ Legend: `[x]` done · `[ ]` todo · `(S/M/L)` effort.
 
 ## Phase 3 — Orchestration & presence
 
-- [ ] **3a. Multi-agent team** (M)
-  - *Why:* cleaner reasoning — a decomposer that splits, a drafter that writes the 10%,
-    a body-double that stays with you through a work block.
-  - *How:* `SequentialAgent` / `LoopAgent` + `AgentTool` sub-agents under the root.
-  - *Done when:* the root delegates decomposition and drafting to sub-agents and the
-    behavior is at least as good as the single-agent baseline (no regression in tone).
+- [x] **3a. Multi-agent team** (M) — DONE
+  - *Why:* cleaner reasoning — a decomposer that splits, a drafter that writes the 10% -
+    without splitting the single user-facing voice.
+  - *How (shipped):* two background sub-agents (`decomposer`, `drafter`) wired into the
+    root via `AgentTool`. The root stays the only voice the user sees; it MUST delegate
+    any draft to `drafter`, which carries the anti-redundancy rules (the mail is from the
+    user's own address, so no repeated name, no "Mi nombre es X", one sign-off).
+  - *Done:* verified — the root delegated to `drafter`, the draft came back clean (topic
+    subject, single signature), and it composed with google_search grounding a real
+    address. No tone regression; fixed the "name 4x" and feelings-narration issues.
 
 - [ ] **3b. Proactive gentle nudges** (M)
   - *Why:* externalize time — ÍMPETU reaches out at a chosen moment ("want to keep going

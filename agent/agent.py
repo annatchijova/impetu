@@ -21,10 +21,10 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 from google.adk.agents import LlmAgent  # noqa: E402 - must follow dotenv load
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.models.google_llm import Gemini
-from google.adk.tools import google_search
+from google.adk.tools import AgentTool, google_search
 from google.genai import types
 
-from .prompts import SYSTEM_INSTRUCTION
+from .prompts import DECOMPOSER_INSTRUCTION, DRAFTER_INSTRUCTION, SYSTEM_INSTRUCTION
 from .tools import ALL_TOOLS, _store
 
 MODEL = os.environ.get("MODEL", "gemini-3.5-flash")
@@ -94,6 +94,21 @@ def _instruction(ctx: ReadonlyContext) -> str:
     return SYSTEM_INSTRUCTION + _memory_block(recall)
 
 
+# Background helpers (never user-facing). The root stays the single voice and uses
+# their output; AgentTool exposes each as a callable tool.
+_decomposer = LlmAgent(
+    name="decomposer",
+    model=_model,
+    description="Breaks an overwhelming task into the single smallest next step.",
+    instruction=DECOMPOSER_INSTRUCTION,
+)
+_drafter = LlmAgent(
+    name="drafter",
+    model=_model,
+    description="Writes a ready-to-use draft (email, message, or script) in the user's voice.",
+    instruction=DRAFTER_INSTRUCTION,
+)
+
 root_agent = LlmAgent(
     name="impetu",
     model=_model,
@@ -103,5 +118,5 @@ root_agent = LlmAgent(
         "commanded, doing the scary first 10% for you."
     ),
     instruction=_instruction,
-    tools=[*ALL_TOOLS, google_search],
+    tools=[*ALL_TOOLS, google_search, AgentTool(agent=_decomposer), AgentTool(agent=_drafter)],
 )
