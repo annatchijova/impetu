@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Anna Tchijova
 """The agent's hands: real actions that lower activation energy.
 
 These are plain Python functions; ADK exposes them to the model as tools. Each one

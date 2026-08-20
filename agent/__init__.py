@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Anna Tchijova
 """Impetu agent package. ADK discovers `root_agent` here."""
 
 from . import agent

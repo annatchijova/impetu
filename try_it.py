@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Anna Tchijova
 """Talk to ÍMPETU locally. Uses GEMINI_API_KEY from the environment.
 
     python3 try_it.py "tengo que responder tres mails que vengo pateando y no puedo empezar"

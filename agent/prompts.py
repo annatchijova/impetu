@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Anna Tchijova
 """The soul of the agent: the system instruction.
 
 This is a Collaborative Partner for neurodivergent (autistic + ADHD) minds.

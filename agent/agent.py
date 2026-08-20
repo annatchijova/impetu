@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Anna Tchijova
 """Root agent wiring: instruction + tools + model.
 
 The model is configurable via env (MODEL), defaulting to a current Gemini. The

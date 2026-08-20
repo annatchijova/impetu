@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 Anna Tchijova
 """Externalized working memory: the durable domain state.
 
 Source of truth is Firestore (serverless, pairs with Cloud Run). If Firestore is
