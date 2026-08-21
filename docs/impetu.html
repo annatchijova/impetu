@@ -273,6 +273,26 @@
   }
   .demo-outcome .pill.good { background: var(--teal-soft); color: var(--teal-deep); }
 
+  .status-strip {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .status-strip .state {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 0.35rem 0.6rem;
+    background: #fff;
+    color: var(--ink-soft);
+  }
+  .status-strip .state.good {
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+  }
+
   .proof-trail {
     margin-top: 1rem;
     border-top: 1px solid var(--line);
@@ -427,6 +447,12 @@
         <span class="pill good"><span data-lang="en">Tool-using</span><span data-lang="es">Usa herramientas</span></span>
         <span class="pill good"><span data-lang="en">Memory-backed</span><span data-lang="es">Con memoria</span></span>
         <span class="pill good"><span data-lang="en">Honest side effects</span><span data-lang="es">Side effects honestos</span></span>
+      </div>
+      <div class="status-strip">
+        <span class="state good"><span data-lang="en">Draft created</span><span data-lang="es">Borrador creado</span></span>
+        <span class="state good"><span data-lang="en">Memory saved</span><span data-lang="es">Memoria guardada</span></span>
+        <span class="state good"><span data-lang="en">Follow-up scheduled</span><span data-lang="es">Seguimiento agendado</span></span>
+        <span class="state"><span data-lang="en">Returns later</span><span data-lang="es">Vuelve después</span></span>
       </div>
       <div class="proof-trail">
         <div class="trail-row">
