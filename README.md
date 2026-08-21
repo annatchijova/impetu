@@ -33,6 +33,11 @@ box.
 - The agent keeps context and returns later without being restarted.
 - The demo can show visible states like draft created, memory saved, and follow-up scheduled.
 
+## Judge shortcut
+
+If you only have 30 seconds, read the canonical demo path and look for the visible states:
+draft created, memory saved, follow-up scheduled, then the return later.
+
 ## Sample session
 
 - User: "I'm overwhelmed and can't start."
