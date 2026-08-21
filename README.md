@@ -31,6 +31,7 @@ box.
 - There is a visible loop, not just a chat exchange.
 - Real side effects are reported as side effects, not implied.
 - The agent keeps context and returns later without being restarted.
+- The demo can show visible states like draft created, memory saved, and follow-up scheduled.
 
 ## Sample session
 
