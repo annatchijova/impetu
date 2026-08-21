@@ -156,6 +156,186 @@
   .stack { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 2.2rem; }
   .stack .s { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-soft); border: 1px solid var(--line); border-radius: 6px; padding: 0.35rem 0.6rem; background: var(--panel); }
 
+  /* ---------- action center ---------- */
+  .action-center {
+    margin-top: 1.7rem;
+    background: linear-gradient(180deg, #fffaf2 0%, var(--panel) 70%);
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    padding: 1.2rem;
+    box-shadow: 0 10px 28px rgba(34, 30, 25, 0.05);
+  }
+  .action-center h2 {
+    font-size: clamp(1.3rem, 2.8vw, 1.9rem);
+    margin: 0 0 0.45rem;
+  }
+  .action-center p {
+    margin: 0;
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+  .action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13.5rem, 1fr));
+    gap: 0.85rem;
+    margin-top: 1rem;
+  }
+  .a-card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper);
+    padding: 0.95rem 1rem;
+  }
+  .a-card .k {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 0.35rem;
+  }
+  .a-card .v {
+    display: block;
+    font-size: 0.98rem;
+    line-height: 1.45;
+  }
+  .a-card.done { border-color: rgba(31, 90, 82, 0.35); background: var(--teal-soft); }
+  .a-card.next { border-color: rgba(190, 122, 22, 0.4); background: var(--amber-soft); }
+
+  /* ---------- demo path ---------- */
+  .demo-path {
+    margin-top: 2rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.2rem;
+  }
+  .demo-path h2 {
+    font-size: clamp(1.25rem, 2.7vw, 1.8rem);
+    margin: 0 0 0.45rem;
+  }
+  .demo-path p {
+    margin: 0;
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+  .demo-flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .demo-step {
+    background: linear-gradient(180deg, #ffffff 0%, var(--paper) 100%);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 0.95rem 1rem;
+  }
+  .demo-step .n {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 999px;
+    margin-bottom: 0.5rem;
+    background: var(--teal-soft);
+    color: var(--teal-deep);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+  }
+  .demo-step h3 {
+    font-size: 1rem;
+    margin: 0 0 0.35rem;
+  }
+  .demo-step p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  .demo-outcome {
+    margin-top: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .demo-outcome .pill {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 0.35rem 0.6rem;
+    background: var(--paper);
+    color: var(--ink-soft);
+  }
+  .demo-outcome .pill.good { background: var(--teal-soft); color: var(--teal-deep); }
+
+  .proof-trail {
+    margin-top: 1rem;
+    border-top: 1px solid var(--line);
+    padding-top: 1rem;
+    display: grid;
+    gap: 0.6rem;
+  }
+  .trail-row {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: 0.75rem;
+    align-items: start;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: linear-gradient(180deg, #fff 0%, var(--paper) 100%);
+  }
+  .trail-row .label {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .trail-row .text {
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: var(--ink-soft);
+  }
+  .trail-row .text strong {
+    color: var(--ink);
+    font-weight: 650;
+  }
+
+  .sample-session {
+    margin-top: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+  }
+  .sample-session .row {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: 0.75rem;
+    padding: 0.8rem 0.85rem;
+    border-top: 1px solid var(--line);
+  }
+  .sample-session .row:first-child { border-top: none; }
+  .sample-session .who {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .sample-session .say {
+    color: var(--ink-soft);
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+  .sample-session .say em { color: var(--ink); font-style: normal; }
+
   /* ---------- future ---------- */
   .future-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr)); gap: 0.9rem; }
   .fitem { border: 1px dashed var(--line-strong); border-radius: 9px; padding: 1.05rem 1.1rem; background: transparent; }
@@ -190,6 +370,92 @@
       <span class="chip"><a href="https://impetu-brkvglmi2a-uc.a.run.app">impetu-brkvglmi2a-uc.a.run.app</a></span>
       <span class="chip">Gemini 3.5 · ADK · Cloud Run</span>
       <span class="chip">Apache-2.0</span>
+    </div>
+
+    <div class="action-center fade">
+      <p class="eyebrow"><span data-lang="en">Agentic at a glance</span><span data-lang="es">Agente en una mirada</span></p>
+      <h2><span data-lang="en">ÍMPETU is proactive, not just conversational</span><span data-lang="es">ÍMPETU es proactivo, no solo conversacional</span></h2>
+      <p><span data-lang="en">The judge should be able to see the agent's behavior without reading the whole page: negotiate one step, do real work, remember what happened, and return later with the next move.</span><span data-lang="es">El jurado debería poder ver el comportamiento del agente sin leer toda la página: negociar un paso, hacer trabajo real, recordar lo que pasó y volver después con el próximo movimiento.</span></p>
+      <div class="action-grid">
+        <div class="a-card">
+          <span class="k"><span data-lang="en">Now</span><span data-lang="es">Ahora</span></span>
+          <span class="v"><span data-lang="en">Negotiates one next step instead of dumping a plan.</span><span data-lang="es">Negocia un solo próximo paso en vez de tirar un plan entero.</span></span>
+        </div>
+        <div class="a-card done">
+          <span class="k"><span data-lang="en">Already done</span><span data-lang="es">Ya hecho</span></span>
+          <span class="v"><span data-lang="en">Drafts mail, reads inbox, checks calendar, writes memory, and sends honest reminders.</span><span data-lang="es">Redacta mails, lee inbox, mira calendario, escribe memoria y manda recordatorios honestos.</span></span>
+        </div>
+        <div class="a-card next">
+          <span class="k"><span data-lang="en">While you are away</span><span data-lang="es">Mientras no estás</span></span>
+          <span class="v"><span data-lang="en">Cloud Scheduler wakes it up and it comes back to you first.</span><span data-lang="es">Cloud Scheduler lo despierta y vuelve a vos primero.</span></span>
+        </div>
+        <div class="a-card">
+          <span class="k"><span data-lang="en">Proof</span><span data-lang="es">Prueba</span></span>
+          <span class="v"><span data-lang="en">Every side effect tells the truth about whether it actually happened.</span><span data-lang="es">Cada side effect dice la verdad sobre si realmente pasó.</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-path fade">
+      <p class="eyebrow"><span data-lang="en">Canonical demo path</span><span data-lang="es">Camino canónico de demo</span></p>
+      <h2><span data-lang="en">One loop that shows the whole agent</span><span data-lang="es">Un ciclo que muestra al agente entero</span></h2>
+      <p><span data-lang="en">This is the flow a judge can watch in one pass: start with friction, negotiate one step, produce a real side effect, store memory, and return later on its own.</span><span data-lang="es">Este es el flujo que un jurado puede ver de una pasada: arrancar con fricción, negociar un paso, producir un side effect real, guardar memoria y volver después solo.</span></p>
+      <div class="demo-flow">
+        <div class="demo-step">
+          <span class="n">1</span>
+          <h3><span data-lang="en">User says they are stuck</span><span data-lang="es">La usuaria dice que está trabada</span></h3>
+          <p><span data-lang="en">The session opens with a real block, not a prompt-writing exercise.</span><span data-lang="es">La sesión arranca con un bloqueo real, no con un ejercicio de escribir prompts.</span></p>
+        </div>
+        <div class="demo-step">
+          <span class="n">2</span>
+          <h3><span data-lang="en">Agent negotiates one step</span><span data-lang="es">El agente negocia un paso</span></h3>
+          <p><span data-lang="en">It asks for energy, framing, and permission before acting.</span><span data-lang="es">Pregunta energía, framing y permiso antes de actuar.</span></p>
+        </div>
+        <div class="demo-step">
+          <span class="n">3</span>
+          <h3><span data-lang="en">Real work happens</span><span data-lang="es">Pasa trabajo real</span></h3>
+          <p><span data-lang="en">A draft, reminder, memory update, or search result is created and reported honestly.</span><span data-lang="es">Se crea y reporta honestamente un borrador, recordatorio, actualización de memoria o resultado de búsqueda.</span></p>
+        </div>
+        <div class="demo-step">
+          <span class="n">4</span>
+          <h3><span data-lang="en">It comes back first</span><span data-lang="es">Vuelve primero</span></h3>
+          <p><span data-lang="en">Cloud Scheduler wakes it up and the next useful move arrives without the user restarting anything.</span><span data-lang="es">Cloud Scheduler lo despierta y el próximo paso útil llega sin que la usuaria reinicie nada.</span></p>
+        </div>
+      </div>
+      <div class="demo-outcome">
+        <span class="pill good"><span data-lang="en">Proactive</span><span data-lang="es">Proactivo</span></span>
+        <span class="pill good"><span data-lang="en">Tool-using</span><span data-lang="es">Usa herramientas</span></span>
+        <span class="pill good"><span data-lang="en">Memory-backed</span><span data-lang="es">Con memoria</span></span>
+        <span class="pill good"><span data-lang="en">Honest side effects</span><span data-lang="es">Side effects honestos</span></span>
+      </div>
+      <div class="proof-trail">
+        <div class="trail-row">
+          <div class="label"><span data-lang="en">Input</span><span data-lang="es">Entrada</span></div>
+          <div class="text"><span data-lang="en">"I'm overwhelmed and I can't start."</span><span data-lang="es">"Estoy abrumada y no puedo arrancar."</span></div>
+        </div>
+        <div class="trail-row">
+          <div class="label"><span data-lang="en">Action</span><span data-lang="es">Acción</span></div>
+          <div class="text"><span data-lang="en">ÍMPETU negotiates one step, drafts a real output, and stores the memory.</span><span data-lang="es">ÍMPETU negocia un paso, redacta un output real y guarda la memoria.</span></div>
+        </div>
+        <div class="trail-row">
+          <div class="label"><span data-lang="en">Return</span><span data-lang="es">Retorno</span></div>
+          <div class="text"><span data-lang="en">Later, Cloud Scheduler wakes it up and it returns with the next useful move.</span><span data-lang="es">Después, Cloud Scheduler lo despierta y vuelve con el próximo movimiento útil.</span></div>
+        </div>
+      </div>
+      <div class="sample-session">
+        <div class="row">
+          <div class="who"><span data-lang="en">User</span><span data-lang="es">Usuaria</span></div>
+          <div class="say"><span data-lang="en">"I'm overwhelmed and can't start."</span><span data-lang="es">"Estoy abrumada y no puedo arrancar."</span></div>
+        </div>
+        <div class="row">
+          <div class="who">ÍMPETU</div>
+          <div class="say"><span data-lang="en">"Want one tiny next step, or do you want to rest first?"</span><span data-lang="es">"¿Querés un paso chiquito o preferís descansar primero?"</span></div>
+        </div>
+        <div class="row">
+          <div class="who"><span data-lang="en">Action</span><span data-lang="es">Acción</span></div>
+          <div class="say"><span data-lang="en">Draft created, memory saved, follow-up scheduled.</span><span data-lang="es">Borrador creado, memoria guardada, seguimiento agendado.</span></div>
+        </div>
+      </div>
     </div>
   </div>
 </header>

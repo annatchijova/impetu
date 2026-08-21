@@ -6,7 +6,38 @@ one thesis:
 > **Starting is the hard problem, not planning.**
 
 For an executive-dysfunction brain the plan is never the bottleneck; the activation
-energy to *begin* is. Every part of ÍMPETU exists to lower that energy.
+energy to *begin* is. Every part of ÍMPETU exists to lower that energy. It does not
+just chat about what to do next: it negotiates the next step, drafts real outputs,
+checks your calendar and inbox, remembers what works for you, and comes back on its
+own with the next useful move. It is a proactive collaborator, not a passive chat
+box.
+
+## Why it feels agentic
+
+- It asks what matters right now instead of dumping a full plan.
+- It uses real tools: Gmail, Calendar, web search, memory, and scheduled nudges.
+- It keeps working after the session ends, so the user does not have to restart.
+- It reports truthfully when a side effect happened and when it did not.
+
+## Canonical demo path
+
+1. The user says they are stuck or overwhelmed.
+2. ÍMPETU asks for one negotiated next step and a 1-to-5 energy rating.
+3. It drafts something real, stores the memory, and schedules the next nudge.
+4. Later, it comes back first with the next useful move.
+
+## What the judge should notice
+
+- There is a visible loop, not just a chat exchange.
+- Real side effects are reported as side effects, not implied.
+- The agent keeps context and returns later without being restarted.
+
+## Sample session
+
+- User: "I'm overwhelmed and can't start."
+- ÍMPETU: "Want one tiny next step, or do you want to rest first?"
+- User: "One step."
+- ÍMPETU: drafts the next step, saves the memory, and schedules the follow-up.
 
 Built for the **All Things Agentic** hackathon — **Collaborative Partner** track.
 
