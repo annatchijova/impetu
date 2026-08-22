@@ -420,6 +420,53 @@
           <span class="v"><span data-lang="en">Every side effect tells the truth about whether it actually happened.</span><span data-lang="es">Cada side effect dice la verdad sobre si realmente pasó.</span></span>
         </div>
       </div>
+
+      <!-- live action center: a real Firestore read + the real proactive move -->
+      <style>
+        .live-panel{margin-top:1.5rem;border:1px solid var(--line-strong);border-radius:.9rem;background:var(--panel);padding:1.1rem 1.25rem}
+        .live-head{display:flex;align-items:center;gap:.55rem;font-family:var(--font-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:.6rem}
+        .live-dot{width:.5rem;height:.5rem;border-radius:50%;background:var(--teal);box-shadow:0 0 0 .18rem var(--teal-soft)}
+        .live-badge{margin-left:auto;font-family:var(--font-mono);font-size:.6rem;padding:.15rem .5rem;border-radius:1rem;border:1px solid var(--line-strong);letter-spacing:.08em}
+        .live-badge.ok{color:var(--teal-deep);background:var(--teal-soft)}
+        .live-badge.warn{color:var(--amber);background:var(--amber-soft)}
+        .live-row{display:flex;gap:1rem;padding:.55rem 0;border-top:1px solid var(--line)}
+        .live-row:first-child{border-top:0}
+        .live-k{flex:0 0 12rem;color:var(--ink-faint);font-size:.85rem}
+        .live-v{color:var(--ink);font-weight:500}
+        .live-empty{color:var(--ink-soft)}
+        @media(max-width:640px){.live-row{flex-direction:column;gap:.1rem}.live-k{flex:none}}
+      </style>
+      <div class="live-panel" id="live-panel">
+        <div class="live-head">
+          <span class="live-dot"></span>
+          <span data-lang="en">Live — read from the agent's memory right now</span><span data-lang="es">En vivo — leído de la memoria del agente ahora mismo</span>
+          <span class="live-badge" id="live-durable"></span>
+        </div>
+        <div id="live-body"><span data-lang="en">Loading…</span><span data-lang="es">Cargando…</span></div>
+      </div>
+      <script>
+        (function(){
+          function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+          function row(en,es,val){return '<div class="live-row"><span class="live-k"><span data-lang="en">'+en+'</span><span data-lang="es">'+es+'</span></span><span class="live-v">'+val+'</span></div>';}
+          function empty(en,es){return '<div class="live-empty"><span data-lang="en">'+en+'</span><span data-lang="es">'+es+'</span></div>';}
+          async function loadLive(){
+            var body=document.getElementById('live-body'), badge=document.getElementById('live-durable');
+            try{
+              var s=await (await fetch('/api/state',{cache:'no-store'})).json();
+              badge.textContent=s.durable?'Firestore':'memory-only';
+              badge.className='live-badge '+(s.durable?'ok':'warn');
+              var html='';
+              if(s.current_task){
+                html+=row('Current task','Tarea actual',esc(s.current_task.title));
+                if(s.current_task.next_step) html+=row('The one next step','El único próximo paso',esc(s.current_task.next_step));
+              } else { html+=empty('No open task yet — talk to ÍMPETU to start one.','Sin tarea abierta todavía — hablale a ÍMPETU para arrancar una.'); }
+              if(s.nudge_preview) html+=row('What it will do on its own','Lo que hará solo',esc(s.nudge_preview.title)+' — '+esc(s.nudge_preview.body));
+              body.innerHTML=html;
+            }catch(e){ body.innerHTML=empty("Couldn't reach the agent right now.","No se pudo leer el agente ahora."); }
+          }
+          loadLive();
+        })();
+      </script>
     </div>
 
     <div class="demo-path fade" id="demo-path">

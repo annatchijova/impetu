@@ -53,6 +53,38 @@ def healthz() -> dict:
     return {"ok": True}
 
 
+_DEMO_USER = "demo"
+
+
+@app.get("/api/state")
+def api_state() -> dict:
+    """Read-only snapshot for the landing's live action center.
+
+    It always reads the fixed DEMO profile, never a real user, so the public
+    page can surface real state (a real Firestore read, the real proactive
+    move) without leaking anyone's tasks. Degrades honestly: `durable` says
+    whether Firestore actually answered.
+    """
+    ctx = nudge_mod._store.recall_context(_DEMO_USER)
+    open_tasks = ctx.get("open_tasks") or []
+    current = open_tasks[0] if open_tasks else None
+    next_step = None
+    if current:
+        undone = [s for s in (current.get("steps") or []) if not s.get("done")]
+        next_step = undone[-1]["text"] if undone else None
+    preview = nudge_mod.build_nudge(_DEMO_USER)
+    energy = ctx.get("last_energy")
+    return {
+        "durable": ctx.get("durable"),
+        "open_task_count": len(open_tasks),
+        "current_task": ({"title": current.get("title"), "next_step": next_step}
+                         if current else None),
+        "last_energy": (energy.get("level") if energy else None),
+        "nudge_preview": ({"title": preview["title"], "body": preview["body"]}
+                          if preview else None),
+    }
+
+
 @app.post("/nudge")
 def run_nudge(user_id: str = "user", x_nudge_token: Optional[str] = Header(default=None)) -> dict:
     """Proactive check-in for Cloud Scheduler: place a calendar reminder from open tasks.
