@@ -434,6 +434,9 @@
         .live-k{flex:0 0 12rem;color:var(--ink-faint);font-size:.85rem}
         .live-v{color:var(--ink);font-weight:500}
         .live-empty{color:var(--ink-soft)}
+        .live-acts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.4rem;font-weight:400}
+        .live-acts li{font-size:.9rem;color:var(--ink-soft)}
+        .act-kind{font-family:var(--font-mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.08em;color:var(--teal-deep);background:var(--teal-soft);border-radius:.6rem;padding:.1rem .45rem;margin-right:.5rem}
         @media(max-width:640px){.live-row{flex-direction:column;gap:.1rem}.live-k{flex:none}}
       </style>
       <div class="live-panel" id="live-panel">
@@ -461,6 +464,10 @@
                 if(s.current_task.next_step) html+=row('The one next step','El único próximo paso',esc(s.current_task.next_step));
               } else { html+=empty('No open task yet — talk to ÍMPETU to start one.','Sin tarea abierta todavía — hablale a ÍMPETU para arrancar una.'); }
               if(s.nudge_preview) html+=row('What it will do on its own','Lo que hará solo',esc(s.nudge_preview.title)+' — '+esc(s.nudge_preview.body));
+              if(s.activity && s.activity.length){
+                var acts='<ul class="live-acts">'+s.activity.map(function(a){return '<li><span class="act-kind">'+esc(a.kind)+'</span>'+esc(a.summary)+'</li>';}).join('')+'</ul>';
+                html+=row('Recent actions it took','Acciones que tomó',acts);
+              }
               body.innerHTML=html;
             }catch(e){ body.innerHTML=empty("Couldn't reach the agent right now.","No se pudo leer el agente ahora."); }
           }

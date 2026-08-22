@@ -18,6 +18,7 @@ from __future__ import annotations
 import os
 import uuid
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 
@@ -120,6 +121,7 @@ class Store:
         }
         res = self._set(path, doc)
         res.data = {"task_id": task_id, **doc}
+        self.log_activity(user_id, "task", f"Saved task: {title}")
         return res
 
     def save_next_step(self, user_id: str, task_id: str, step_text: str, size: str) -> StoreResult:
@@ -129,6 +131,7 @@ class Store:
         doc.setdefault("steps", []).append(step)
         res = self._set(path, doc)
         res.data = step
+        self.log_activity(user_id, "step", f"Negotiated next step: {step_text}")
         return res
 
     def mark_step_done(self, user_id: str, task_id: str, step_id: str) -> StoreResult:
@@ -141,18 +144,32 @@ class Store:
                 s["done"] = True
         if doc.get("steps") and all(s.get("done") for s in doc["steps"]):
             doc["status"] = "done"
-        return self._set(path, doc)
+        res = self._set(path, doc)
+        self.log_activity(user_id, "done", "Marked a step done")
+        return res
 
     def log_energy(self, user_id: str, level: int, note: str = "") -> StoreResult:
         entry_id = _new_id()
         path = f"users/{user_id}/energy/{entry_id}"
-        return self._set(path, {"entry_id": entry_id, "level": level, "note": note})
+        res = self._set(path, {"entry_id": entry_id, "level": level, "note": note})
+        self.log_activity(user_id, "energy", f"Logged energy {level}/5")
+        return res
 
     def remember(self, user_id: str, key: str, value: str) -> StoreResult:
         path = f"users/{user_id}"
         doc = self._get(path) or {"user_id": user_id, "notes": {}}
         doc.setdefault("notes", {})[key] = value
-        return self._set(path, doc)
+        res = self._set(path, doc)
+        if key.startswith("draft:"):
+            summ = f"Drafted email: {key[6:]}"
+        elif key == "address":
+            summ = "Set address preference"
+        elif key.startswith("worked:"):
+            summ = "Noted what worked"
+        else:
+            summ = f"Remembered: {key}"
+        self.log_activity(user_id, "memory", summ)
+        return res
 
     def recall_context(self, user_id: str) -> dict:
         profile = self._get(f"users/{user_id}") or {"user_id": user_id, "notes": {}}
@@ -166,3 +183,28 @@ class Store:
             "open_tasks": open_tasks,
             "last_energy": last_energy,
         }
+
+    # --- activity trail --------------------------------------------------
+    def log_activity(self, user_id: str, kind: str, summary: str) -> None:
+        """Append one visible side effect to the person's activity trail, so the
+        agent's real actions can be shown, not just described.
+
+        Best-effort by design: a logging failure must never break the operation
+        that produced the side effect, so everything here is swallowed.
+        """
+        try:
+            aid = _new_id()
+            self._set(f"users/{user_id}/activity/{aid}", {
+                "id": aid,
+                "kind": kind,
+                "summary": summary[:140],
+                "at": datetime.now(timezone.utc).isoformat(),
+            })
+        except Exception:  # noqa: BLE001 - never let logging break a real action
+            pass
+
+    def recent_activity(self, user_id: str, limit: int = 8) -> list[dict]:
+        """The most recent side effects, newest first."""
+        items = self._list(f"users/{user_id}/activity")
+        items.sort(key=lambda a: a.get("at", ""), reverse=True)
+        return items[:limit]

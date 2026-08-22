@@ -74,6 +74,7 @@ def api_state() -> dict:
         next_step = undone[-1]["text"] if undone else None
     preview = nudge_mod.build_nudge(_DEMO_USER)
     energy = ctx.get("last_energy")
+    activity = nudge_mod._store.recent_activity(_DEMO_USER, 6)
     return {
         "durable": ctx.get("durable"),
         "open_task_count": len(open_tasks),
@@ -82,6 +83,8 @@ def api_state() -> dict:
         "last_energy": (energy.get("level") if energy else None),
         "nudge_preview": ({"title": preview["title"], "body": preview["body"]}
                           if preview else None),
+        "activity": [{"kind": a.get("kind"), "summary": a.get("summary"),
+                      "at": a.get("at")} for a in activity],
     }
 
 
