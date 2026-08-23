@@ -155,7 +155,14 @@ gcloud run deploy impetu --source . --region us-central1 --allow-unauthenticated
 # Gmail/Calendar token as a secret (kept out of the image):
 gcloud secrets create impetu-gmail-token --data-file=gmail_token.json
 gcloud run services update impetu --region us-central1 \
-  --set-secrets GMAIL_TOKEN_JSON=impetu-gmail-token:latest --update-env-vars NUDGE_TOKEN=<random>
+  --set-secrets GMAIL_TOKEN_JSON=impetu-gmail-token:latest \
+  --update-env-vars NUDGE_TOKEN=<random>,IMPETU_OWNER_USER_ID=<your-user-id>,IMPETU_PUBLIC_DEMO=1
+
+# IMPETU_OWNER_USER_ID is the only user_id allowed to reach the shared Google
+# token; everyone else is refused. IMPETU_PUBLIC_DEMO=1 keeps the public agent
+# routes open but pinned to the "demo" profile (which cannot touch Gmail or
+# Calendar). For a private deployment set IMPETU_ACCESS_TOKEN instead. All of
+# these fail closed when unset - see docs/RED-TEAM.md.
 
 # Proactive nudges: a scheduled call to /nudge (protected by NUDGE_TOKEN):
 gcloud scheduler jobs create http impetu-nudge --location us-central1 \
@@ -174,7 +181,12 @@ The runtime service account needs Vertex AI User, Firestore access, and
 - **Respect the person's intelligence.** Small steps lower activation energy; they are not
   about capability.
 - **Honest degradation.** Every tool with a side effect reports whether it actually
-  happened — it never fakes success. No secret is ever committed to the repo.
+  happened — it never fakes success, and never reports an uncertain outcome as a
+  failure. No secret is ever committed to the repo.
+- **One identity per operation.** The caller's identity travels all the way to the
+  side effect, and every side effect's id is recorded. See [`docs/RED-TEAM.md`](docs/RED-TEAM.md)
+  for the adversarial review this rule came out of, and
+  [`docs/RED-TEAM-FIXES.md`](docs/RED-TEAM-FIXES.md) for the patches.
 
 ## License
 

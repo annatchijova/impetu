@@ -16,6 +16,7 @@ from __future__ import annotations
 import base64
 from email.message import EmailMessage
 
+from . import outcome
 from .google_auth import is_connected, load_creds  # noqa: F401 - re-exported for callers
 
 
@@ -28,11 +29,17 @@ def _build_raw(to: str, subject: str, body: str) -> str:
 
 
 def create_draft(to: str, subject: str, body: str) -> dict:
-    """Create a Gmail draft. Returns {created, draft_id?} or {created: False, reason}."""
+    """Create a Gmail draft.
+
+    Returns `{created, status, draft_id?}`. `status` is outcome.DONE / FAILED /
+    UNKNOWN; UNKNOWN means the draft may have been created even though we did not
+    get the answer, so it must never be reported as "it did not happen".
+    """
     creds = load_creds()
     if creds is None:
         return {
             "created": False,
+            "status": outcome.FAILED,
             "reason": "Gmail not connected yet - run setup_gmail.py once to authorize.",
         }
     try:
@@ -46,9 +53,13 @@ def create_draft(to: str, subject: str, body: str) -> dict:
             .create(userId="me", body={"message": {"raw": raw}})
             .execute()
         )
-        return {"created": True, "draft_id": draft.get("id")}
+        return {"created": True, "status": outcome.DONE, "draft_id": draft.get("id")}
     except Exception as exc:  # noqa: BLE001 - report failure honestly, never crash
-        return {"created": False, "reason": f"Gmail API error: {exc}"}
+        res = outcome.failure(exc, "Gmail API error")
+        # `created` stays False for backwards compatibility, but `status` tells
+        # the truth: UNKNOWN means a draft may exist. See docs/RED-TEAM.md F5.
+        res["created"] = False
+        return res
 
 
 def _extract_plain(payload: dict) -> str:
@@ -96,7 +107,7 @@ def search_messages(query: str, max_results: int = 5) -> dict:
             })
         return {"ok": True, "count": len(results), "results": results}
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "reason": f"Gmail read error (is the readonly scope authorized?): {exc}"}
+        return outcome.failure(exc, "Gmail read error (is the readonly scope authorized?)")
 
 
 def get_message(message_id: str) -> dict:
@@ -118,4 +129,4 @@ def get_message(message_id: str) -> dict:
             "body": body[:4000],
         }
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "reason": f"Gmail read error: {exc}"}
+        return outcome.failure(exc, "Gmail read error")
