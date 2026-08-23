@@ -3,6 +3,7 @@ __pycache__/
 .env
 .adk/
 gmail_token.json
+tokens/
 client_secret.json
 .venv/
 venv/

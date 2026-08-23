@@ -15,10 +15,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from . import gcal
-from .state import Store
+from . import gcal, reconcile
+from .state import get_store
 
-_store = Store()
+_store = get_store()
 
 
 def build_nudge(user_id: str) -> Optional[dict]:
@@ -35,10 +35,32 @@ def build_nudge(user_id: str) -> Optional[dict]:
     return {"title": title, "body": body, "task_id": task.get("task_id")}
 
 
-def place_nudge(user_id: str, when_iso: str) -> dict:
-    """Turn the next open task into an active calendar reminder at `when_iso`."""
+def place_nudge(user_id: str, when_iso: str, day_key: str = "") -> dict:
+    """Turn the next open task into an active calendar reminder at `when_iso`.
+
+    The reminder is keyed to the LOGICAL operation - this person, this task, this
+    day - not to the moment of invocation. A duplicated scheduler firing, a retry
+    after a lost response, or a manual re-run therefore converge on one event
+    instead of stacking reminders. See docs/RED-TEAM.md F4.
+    """
+    # Settle anything still uncertain BEFORE adding more to the world, so the
+    # scheduled loop converges instead of accumulating doubt.
+    reconciled = reconcile.reconcile_pending(_store, user_id)
     nudge = build_nudge(user_id)
     if nudge is None:
-        return {"ok": False, "reason": "No open tasks to nudge about - nothing to push."}
-    result = gcal.create_event(nudge["title"], when_iso, description=nudge["body"])
-    return {"ok": result.get("ok"), "nudge": nudge, "calendar": result}
+        return {"ok": False, "reconciled": reconciled,
+                "reason": "No open tasks to nudge about - nothing to push."}
+    day = day_key or when_iso[:10]
+    key = f"nudge|{user_id}|{nudge.get('task_id') or nudge['title']}|{day}"
+    result = gcal.create_event(nudge["title"], when_iso, description=nudge["body"],
+                               idempotency_key=key, user_id=user_id)
+    # Record what we created out in the world, so a later run can tell whether
+    # this already happened instead of guessing. See docs/RED-TEAM.md F9.
+    _store.record_side_effect(user_id, "calendar_event", result.get("event_id", ""),
+                              result.get("status", "unknown"), nudge["title"])
+    _store.log_activity(user_id, "nudge",
+                        f"Placed reminder: {nudge['title']}",
+                        status=result.get("status", "unknown"))
+    return {"ok": result.get("ok"), "status": result.get("status"),
+            "duplicate": result.get("duplicate", False),
+            "reconciled": reconciled, "nudge": nudge, "calendar": result}
