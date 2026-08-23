@@ -62,6 +62,34 @@ def create_draft(to: str, subject: str, body: str) -> dict:
         return res
 
 
+def find_draft_by_subject(subject: str) -> dict:
+    """Best-effort: is there a draft with this subject?
+
+    When a draft creation loses its response we never learn the draft id, so an
+    id lookup is impossible and this is the only way back to the truth. It
+    matches on subject, so identical subjects are indistinguishable - the caller
+    must treat a hit as "probably yes", not proof. See docs/RED-TEAM.md F5.
+    """
+    creds = load_creds()
+    if creds is None:
+        return {"ok": False, "reason": "Gmail not connected."}
+    try:
+        from googleapiclient.discovery import build
+
+        svc = build("gmail", "v1", credentials=creds, cache_discovery=False)
+        listing = svc.users().drafts().list(userId="me", maxResults=50).execute()
+        wanted = (subject or "").strip()
+        for d in listing.get("drafts", []) or []:
+            full = svc.users().drafts().get(userId="me", id=d["id"], format="metadata").execute()
+            headers = full.get("message", {}).get("payload", {}).get("headers", [])
+            got = next((h["value"] for h in headers if h.get("name") == "Subject"), "")
+            if got.strip() == wanted:
+                return {"ok": True, "exists": True, "draft_id": d["id"]}
+        return {"ok": True, "exists": False}
+    except Exception as exc:  # noqa: BLE001
+        return outcome.failure(exc, "Gmail draft lookup error")
+
+
 def _extract_plain(payload: dict) -> str:
     """Pull the plain-text body out of a Gmail message payload, recursively."""
     if payload.get("mimeType") == "text/plain":

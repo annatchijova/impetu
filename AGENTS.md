@@ -26,7 +26,7 @@ Auth is **Vertex AI**, not the AI Studio API key: the free tier is 20 requests/d
 too little for development. `.env` sets `GOOGLE_GENAI_USE_VERTEXAI=TRUE`, the project,
 and `GOOGLE_CLOUD_LOCATION=global` (Gemini 3.5 lives on the global Vertex endpoint).
 
-Security regressions have a suite: `python3 tests/test_red_team.py` (18 tests).
+Security regressions have a suite: `python3 tests/test_red_team.py` (24 tests).
 Run it after touching identity, tools, state, or the server. Beyond that,
 **verify any change to the agent by running a real turn** and reading the output — do not claim it works from inspection. For prompt or
 memory changes, run a *two-turn, same-session* check (see `try_it.py`) to confirm the
@@ -67,7 +67,9 @@ one is a regression even if it "reads nicer":
    drop a logical id (`task_id`, a note's key) before the boundary where it
    matters. See `docs/RED-TEAM.md`.
 8. **Three outcome states, not two.** Use `agent/outcome.py`. Reporting UNKNOWN as
-   FAILED is a false negative and makes the agent redo real side effects.
+   FAILED is a false negative and makes the agent redo real side effects. Record
+   every side effect's external id, and reconcile the uncertain ones rather than
+   guessing (`agent/reconcile.py`).
 9. **Recalled memory is data, not instruction.** It renders into the prompt with
    its key and `source` intact, inside the DATA block. Never concatenate stored
    strings onto the system instruction.

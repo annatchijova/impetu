@@ -24,12 +24,13 @@ from typing import Optional
 
 from google.adk.tools import ToolContext
 
-from . import gcal, gmail
+from . import gcal, gmail, reconcile
 from .identity import google_identity_check
-from .state import SOURCE_EXTERNAL, SOURCE_MODEL, SOURCE_USER, Store
+from .state import SOURCE_MODEL, SOURCE_USER, _stable_id, get_store
 
-# One store per process. Firestore client is cheap to hold; falls back honestly.
-_store = Store()
+# One store per process, shared with `nudge` so every reader sees the same
+# state even in the in-memory fallback. See docs/RED-TEAM.md F10.
+_store = get_store()
 
 
 def _google_guard(tool_context: ToolContext):
@@ -183,8 +184,12 @@ def draft_email(to: str, subject: str, body: str, tool_context: ToolContext) -> 
         }
     gmail_result = gmail.create_draft(to, subject, body)
     status = gmail_result.get("status", "failed")
-    _store.record_side_effect(uid, "gmail_draft", gmail_result.get("draft_id", ""),
-                              status, subject)
+    # When the answer was lost Gmail never told us the draft id, so key the
+    # record on something stable and let reconciliation match it by subject.
+    external_id = (gmail_result.get("draft_id")
+                   or (f"{reconcile.PENDING_PREFIX}{_stable_id(uid, subject)}"
+                       if status == "unknown" else ""))
+    _store.record_side_effect(uid, "gmail_draft", external_id, status, subject)
     _store.log_activity(
         uid, "draft",
         (f"Created Gmail draft: {subject[:60]}" if status == "done"
@@ -274,6 +279,21 @@ def read_email(message_id: str, tool_context: ToolContext) -> dict:
     return result
 
 
+def check_uncertain_actions(tool_context: ToolContext) -> dict:
+    """Find out whether an action you were UNSURE about actually happened.
+
+    Some tools come back with status "unknown": the answer was lost, so the draft
+    or the reminder may or may not exist. Call this when that happened, or when
+    they ask you to check. It asks Gmail and Calendar directly instead of
+    guessing, and tells you which way each one resolved. Never redo an uncertain
+    action without calling this first.
+    """
+    uid, denied = _google_guard(tool_context)
+    if denied:
+        return denied
+    return reconcile.reconcile_pending(_store, uid)
+
+
 # The ordered toolset handed to the agent.
 ALL_TOOLS = [
     recall_context,
@@ -289,4 +309,5 @@ ALL_TOOLS = [
     read_email,
     get_today_schedule,
     schedule_reminder,
+    check_uncertain_actions,
 ]

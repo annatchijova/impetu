@@ -15,10 +15,10 @@ from __future__ import annotations
 
 from typing import Optional
 
-from . import gcal
-from .state import Store
+from . import gcal, reconcile
+from .state import get_store
 
-_store = Store()
+_store = get_store()
 
 
 def build_nudge(user_id: str) -> Optional[dict]:
@@ -43,9 +43,13 @@ def place_nudge(user_id: str, when_iso: str, day_key: str = "") -> dict:
     after a lost response, or a manual re-run therefore converge on one event
     instead of stacking reminders. See docs/RED-TEAM.md F4.
     """
+    # Settle anything still uncertain BEFORE adding more to the world, so the
+    # scheduled loop converges instead of accumulating doubt.
+    reconciled = reconcile.reconcile_pending(_store, user_id)
     nudge = build_nudge(user_id)
     if nudge is None:
-        return {"ok": False, "reason": "No open tasks to nudge about - nothing to push."}
+        return {"ok": False, "reconciled": reconciled,
+                "reason": "No open tasks to nudge about - nothing to push."}
     day = day_key or when_iso[:10]
     key = f"nudge|{user_id}|{nudge.get('task_id') or nudge['title']}|{day}"
     result = gcal.create_event(nudge["title"], when_iso, description=nudge["body"],
@@ -59,4 +63,4 @@ def place_nudge(user_id: str, when_iso: str, day_key: str = "") -> dict:
                         status=result.get("status", "unknown"))
     return {"ok": result.get("ok"), "status": result.get("status"),
             "duplicate": result.get("duplicate", False),
-            "nudge": nudge, "calendar": result}
+            "reconciled": reconciled, "nudge": nudge, "calendar": result}

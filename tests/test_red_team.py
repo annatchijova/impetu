@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("IMPETU_FORCE_MEMORY", "1")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
 
-from agent import gcal, gmail, identity, nudge, outcome, tools  # noqa: E402
+from agent import gcal, gmail, nudge, outcome, reconcile, tools  # noqa: E402
 from agent import agent as agent_mod  # noqa: E402
 from agent.state import SOURCE_EXTERNAL, SOURCE_USER, Store  # noqa: E402
 
@@ -41,6 +41,17 @@ class World:
     def __init__(self):
         self.events, self.drafts = {}, []
         self.fail_after_commit = False
+
+    @property
+    def draft_subjects(self):
+        """Subjects of the drafts that actually landed, in order."""
+        import base64
+        import email
+        out = []
+        for body in self.drafts:
+            raw = base64.urlsafe_b64decode(body["message"]["raw"])
+            out.append(email.message_from_bytes(raw).get("Subject", ""))
+        return out
 
 
 WORLD = World()
@@ -65,6 +76,13 @@ class _Events:
 
     def list(self, **kw): return _Req(lambda: {"items": []})
 
+    def get(self, calendarId, eventId):
+        def go():
+            if eventId not in WORLD.events:
+                raise ApiError(404, "not found")
+            return WORLD.events[eventId]
+        return _Req(go)
+
 
 class _Drafts:
     def create(self, userId, body):
@@ -73,6 +91,18 @@ class _Drafts:
             if WORLD.fail_after_commit:
                 raise ApiError(503, "backend timed out")
             return {"id": f"d{len(WORLD.drafts)}"}
+        return _Req(go)
+
+    def list(self, userId, maxResults):
+        return _Req(lambda: {"drafts": [{"id": f"d{i + 1}"}
+                                        for i in range(len(WORLD.drafts))]})
+
+    def get(self, userId, id, format=None):
+        def go():
+            idx = int(id[1:]) - 1
+            subject = WORLD.draft_subjects[idx]
+            return {"message": {"payload": {"headers": [
+                {"name": "Subject", "value": subject}]}}}
         return _Req(go)
 
 
@@ -293,6 +323,74 @@ def test_f9_created_ids_are_persisted():
     res = nudge.place_nudge(OWNER, "2026-08-25T10:00:00", day_key="2026-08-25")
     stored = S._list(f"users/{OWNER}/side_effects")
     assert any(x["external_id"] == res["calendar"]["event_id"] for x in stored), stored
+
+
+# --- F10: one store per process --------------------------------------------
+def test_f10_tools_and_nudge_share_one_store():
+    assert tools._store is nudge._store
+
+
+# --- F5 reconciliation: turn UNKNOWN into an answer -------------------------
+def test_reconcile_confirms_an_event_that_did_land():
+    setup_module()
+    WORLD.events.clear()
+    S = nudge._store
+    t = S.save_task(OWNER, "Reconciliar evento", "d")
+    S.save_next_step(OWNER, t.data["task_id"], "paso", "tiny")
+
+    WORLD.fail_after_commit = True                  # commits, then loses the answer
+    res = nudge.place_nudge(OWNER, "2026-09-01T10:00:00", day_key="2026-09-01")
+    assert res["status"] == outcome.UNKNOWN
+    assert len(WORLD.events) == 1                   # it really is on the calendar
+    assert len(S.pending_side_effects(OWNER)) == 1
+
+    WORLD.fail_after_commit = False
+    summary = reconcile.reconcile_pending(S, OWNER)
+    assert summary["resolved"] and summary["resolved"][0]["exists"] is True
+    assert S.pending_side_effects(OWNER) == []      # no longer uncertain
+
+
+def test_reconcile_marks_an_event_that_never_landed_as_failed():
+    setup_module()
+    WORLD.events.clear()
+    S = nudge._store
+    S.record_side_effect(OWNER, "calendar_event", "impetughost", outcome.UNKNOWN, "x")
+    summary = reconcile.reconcile_pending(S, OWNER)
+    assert any(r["exists"] is False for r in summary["resolved"]), summary
+    assert S.pending_side_effects(OWNER) == []
+
+
+def test_reconcile_finds_a_draft_by_subject_when_the_id_was_lost():
+    setup_module()
+    WORLD.drafts.clear()
+    S = tools._store
+    WORLD.fail_after_commit = True
+    out = tools.draft_email("a@b.c", "Consulta perdida", "cuerpo", Ctx(OWNER))
+    assert out["gmail_status"] == outcome.UNKNOWN
+    assert len(WORLD.drafts) == 1                   # the draft really exists
+    pending = S.pending_side_effects(OWNER)
+    assert pending and pending[0]["external_id"].startswith(reconcile.PENDING_PREFIX)
+
+    WORLD.fail_after_commit = False
+    summary = reconcile.reconcile_pending(S, OWNER)
+    assert any(r["kind"] == "gmail_draft" and r["exists"] for r in summary["resolved"]), summary
+
+
+def test_place_nudge_reconciles_before_creating_anything_new():
+    setup_module()
+    WORLD.events.clear()
+    S = nudge._store
+    S.record_side_effect(OWNER, "calendar_event", "impetughost2", outcome.UNKNOWN, "x")
+    t = S.save_task(OWNER, "Otra tarea", "d")
+    S.save_next_step(OWNER, t.data["task_id"], "paso", "tiny")
+    res = nudge.place_nudge(OWNER, "2026-09-02T10:00:00", day_key="2026-09-02")
+    assert res["reconciled"]["checked"] >= 1
+    assert S.pending_side_effects(OWNER) == []
+
+
+def test_check_uncertain_actions_is_identity_gated():
+    setup_module()
+    assert tools.check_uncertain_actions(Ctx("mallory")).get("denied") is True
 
 
 if __name__ == "__main__":

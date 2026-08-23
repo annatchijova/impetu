@@ -95,6 +95,23 @@ class _MemoryBackend:
         return [v for k, v in self._db.items() if k.startswith(prefix + "/")]
 
 
+_SHARED: "Store | None" = None
+
+
+def get_store() -> "Store":
+    """The one Store this process uses.
+
+    `tools` and `nudge` each used to construct their own, so against the
+    in-memory fallback `/nudge` and `/api/state` read a different store than the
+    agent's tools wrote to, and Firestore was health-checked twice at import.
+    See docs/RED-TEAM.md F10.
+    """
+    global _SHARED
+    if _SHARED is None:
+        _SHARED = Store()
+    return _SHARED
+
+
 class Store:
     """Thin repository over Firestore with an honest in-memory fallback."""
 
@@ -282,6 +299,22 @@ class Store:
         """Side effects whose real-world outcome we never confirmed."""
         items = self._list(f"users/{user_id}/side_effects")
         return [i for i in items if i.get("status") == "unknown"]
+
+    def resolve_side_effect(self, user_id: str, external_id: str, status: str,
+                            resolved_id: str = "") -> None:
+        """Record what we later learned about an UNKNOWN side effect."""
+        path = f"users/{user_id}/side_effects/{external_id}"
+        doc = self._get(path)
+        if not doc:
+            return
+        doc["status"] = status
+        doc["resolved_at"] = _now()
+        if resolved_id and resolved_id != external_id:
+            doc["external_id"] = resolved_id
+        try:
+            self._set(path, doc)
+        except Exception:  # noqa: BLE001 - bookkeeping must never break a turn
+            pass
 
     # --- activity trail --------------------------------------------------
     def log_activity(self, user_id: str, kind: str, summary: str,

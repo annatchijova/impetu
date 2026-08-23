@@ -107,6 +107,28 @@ def list_today(tz: str = DEFAULT_TZ) -> dict:
         return outcome.failure(exc, "Calendar error (is the Calendar scope authorized?)")
 
 
+def get_event(event_id: str) -> dict:
+    """Does this event exist on the calendar right now?
+
+    Used to resolve an UNKNOWN outcome: we know the id we asked Calendar to use,
+    so we can go back and ask instead of guessing. Returns
+    `{ok, exists}`; `ok=False` means we still could not find out.
+    See docs/RED-TEAM.md F5.
+    """
+    svc = _service()
+    if svc is None:
+        return {"ok": False, "reason": "Calendar not connected."}
+    try:
+        ev = svc.events().get(calendarId="primary", eventId=event_id).execute()
+        # A deleted event still resolves, with status "cancelled".
+        return {"ok": True, "exists": ev.get("status") != "cancelled",
+                "link": ev.get("htmlLink")}
+    except Exception as exc:  # noqa: BLE001
+        if getattr(getattr(exc, "resp", None), "status", None) == 404:
+            return {"ok": True, "exists": False}
+        return outcome.failure(exc, "Calendar lookup error")
+
+
 def create_event(summary: str, start_iso: str, end_iso: str = "", description: str = "",
                  tz: str = DEFAULT_TZ, idempotency_key: str = "") -> dict:
     """Create a calendar event (a reminder the user approved).

@@ -76,14 +76,35 @@ every `event_id` and `draft_id` under `users/{id}/side_effects/{external_id}`,
 keyed by the external id so recording twice is a no-op.
 `state.pending_side_effects` lists those whose outcome is still `unknown`.
 
-**F10 — divergent stores.** Left as-is; it only affects the in-memory fallback
-and fixing it properly means a shared module-level store, which is a separate
-refactor. Documented rather than silently patched.
+**F10 — divergent stores.** `state.get_store()` returns one lazily-created Store
+for the process; `tools` and `nudge` both use it. This also removes the duplicate
+Firestore health check that ran at import.
+
+## Reconciliation: turning UNKNOWN into an answer
+
+Recording an uncertain side effect was only half the fix. `agent/reconcile.py`
+now goes back and asks:
+
+- `gcal.get_event(event_id)` looks the event up by the deterministic id we chose,
+  treating a 404 as "it never landed" and `status: cancelled` as deleted.
+- `gmail.find_draft_by_subject(subject)` handles the harder case: a lost draft
+  response never told us the draft id, so subject matching is the only way back
+  to the truth. It cannot distinguish two drafts with the same subject, and says
+  so - a hit means "probably yes", not proof.
+- `state.resolve_side_effect` writes the answer back and the activity trail
+  records that a previously uncertain action was settled.
+
+It runs in two places, deliberately not on every turn: `place_nudge` reconciles
+*before* creating anything new, so the scheduled loop converges instead of
+accumulating doubt; and the agent can call `check_uncertain_actions` when the
+person asks. Rule 11 in `prompts.py` tells the model never to redo an uncertain
+action without calling it first.
 
 ## Verification
 
 `tests/test_red_team.py` replays each original attack and asserts it now fails —
-18 tests, all passing. It fakes Google at the transport boundary only, so the real
+24 tests, all passing. Each was checked as a negative control: reverting the fix
+turns the corresponding tests red, so they can actually fail. It fakes Google at the transport boundary only, so the real
 `gcal`, `gmail`, `state`, `nudge`, `tools` and `server.main` code paths execute,
 and the fake keeps the real world separate from the response so F5 stays
 observable.
@@ -100,7 +121,11 @@ python3 tests/test_red_team.py
 - **Real caller authentication.** `IMPETU_ACCESS_TOKEN` is a shared secret, not
   per-user identity. A production deployment wants IAP or an identity provider in
   front of the agent routes.
-- **F5 reconciliation.** Unknown side effects are now recorded and surfaced, but
-  nothing yet goes back to Google to ask whether the event or draft actually
-  exists. The stored `external_id` is what makes that possible.
+- **Gmail reconciliation is best-effort.** Matching on subject cannot distinguish
+  two drafts with the same subject. Resolving by id would need Gmail to return one
+  before the response is lost, which it cannot.
+- **The prompt-side mitigations for F7 are reasoned, not verified.** Rules 10 and
+  11, the DATA framing, and the untrusted tags have not been tested against a live
+  Gemini, because no Vertex credentials were available. The `build_nudge` half of
+  F7/F8 needs no model and is fully covered by tests; model compliance is not.
 - Findings marked untested in `docs/RED-TEAM.md` remain untested.
