@@ -57,8 +57,8 @@ def event_id_for(idempotency_key: str) -> str:
     return f"impetu{encoded[:26]}"
 
 
-def _service():
-    creds = load_creds()
+def _service(user_id=None):
+    creds = load_creds(user_id)
     if creds is None:
         return None
     from googleapiclient.discovery import build
@@ -72,9 +72,9 @@ def _is_conflict(exc: Exception) -> bool:
     return status == 409 or "409" in str(exc)
 
 
-def list_today(tz: str = DEFAULT_TZ) -> dict:
+def list_today(tz: str = DEFAULT_TZ, user_id=None) -> dict:
     """Return today's events (summary + start), or an honest reason if unavailable."""
-    svc = _service()
+    svc = _service(user_id)
     if svc is None:
         return {"ok": False, "reason": "Calendar not connected - re-authorize to add the Calendar scope."}
     try:
@@ -107,7 +107,7 @@ def list_today(tz: str = DEFAULT_TZ) -> dict:
         return outcome.failure(exc, "Calendar error (is the Calendar scope authorized?)")
 
 
-def get_event(event_id: str) -> dict:
+def get_event(event_id: str, user_id=None) -> dict:
     """Does this event exist on the calendar right now?
 
     Used to resolve an UNKNOWN outcome: we know the id we asked Calendar to use,
@@ -115,7 +115,7 @@ def get_event(event_id: str) -> dict:
     `{ok, exists}`; `ok=False` means we still could not find out.
     See docs/RED-TEAM.md F5.
     """
-    svc = _service()
+    svc = _service(user_id)
     if svc is None:
         return {"ok": False, "reason": "Calendar not connected."}
     try:
@@ -130,7 +130,7 @@ def get_event(event_id: str) -> dict:
 
 
 def create_event(summary: str, start_iso: str, end_iso: str = "", description: str = "",
-                 tz: str = DEFAULT_TZ, idempotency_key: str = "") -> dict:
+                 tz: str = DEFAULT_TZ, idempotency_key: str = "", user_id=None) -> dict:
     """Create a calendar event (a reminder the user approved).
 
     Pass `idempotency_key` identifying the LOGICAL operation (e.g. the user and
@@ -141,7 +141,7 @@ def create_event(summary: str, start_iso: str, end_iso: str = "", description: s
     outcome.DONE / FAILED / UNKNOWN. UNKNOWN means the event may exist - never
     report it to the person as "it did not happen".
     """
-    svc = _service()
+    svc = _service(user_id)
     if svc is None:
         return {"ok": False, "status": outcome.FAILED,
                 "reason": "Calendar not connected - re-authorize to add the Calendar scope."}

@@ -158,8 +158,11 @@ gcloud run services update impetu --region us-central1 \
   --set-secrets GMAIL_TOKEN_JSON=impetu-gmail-token:latest \
   --update-env-vars NUDGE_TOKEN=<random>,IMPETU_OWNER_USER_ID=<your-user-id>,IMPETU_PUBLIC_DEMO=1
 
-# IMPETU_OWNER_USER_ID is the only user_id allowed to reach the shared Google
-# token; everyone else is refused. IMPETU_PUBLIC_DEMO=1 keeps the public agent
+# Preferred: give each person their own token, so their side effects land on
+# their own account and no shared-token grant is needed:
+#   python3 setup_gmail.py <user_id>   # then store as impetu-google-token-<user_id>
+# IMPETU_OWNER_USER_ID is the only user_id allowed to reach the SHARED token;
+# anyone else without a personal token is refused. IMPETU_PUBLIC_DEMO=1 keeps the public agent
 # routes open but pinned to the "demo" profile (which cannot touch Gmail or
 # Calendar). For a private deployment set IMPETU_ACCESS_TOKEN instead. All of
 # these fail closed when unset - see docs/RED-TEAM.md.

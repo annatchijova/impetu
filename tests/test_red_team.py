@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ.setdefault("IMPETU_FORCE_MEMORY", "1")
 os.environ.setdefault("GOOGLE_CLOUD_PROJECT", "test-project")
 
-from agent import gcal, gmail, nudge, outcome, reconcile, tools  # noqa: E402
+from agent import gcal, gmail, google_auth, identity, nudge, outcome, reconcile, tools  # noqa: E402
 from agent import agent as agent_mod  # noqa: E402
 from agent.state import SOURCE_EXTERNAL, SOURCE_USER, Store  # noqa: E402
 
@@ -124,8 +124,8 @@ class FakeSvc:
 def _install():
     import googleapiclient.discovery as disc
     disc.build = lambda *a, **k: FakeSvc()
-    gcal.load_creds = lambda: object()
-    gmail.load_creds = lambda: object()
+    gcal.load_creds = lambda *a, **k: object()
+    gmail.load_creds = lambda *a, **k: object()
 
 
 class Ctx:
@@ -134,6 +134,7 @@ class Ctx:
 
 def setup_module(_=None):
     _install()
+    google_auth.forget_cached_tokens()
     os.environ["IMPETU_OWNER_USER_ID"] = OWNER
 
 
@@ -264,14 +265,14 @@ def test_f5_task_retry_converges():
 # --- F6: the trail records what happened ------------------------------------
 def test_f6_trail_does_not_invent_a_draft():
     setup_module()
-    gmail.load_creds = lambda: None                    # Gmail down
+    gmail.load_creds = lambda *a, **k: None            # Gmail down
     S = tools._store
     out = tools.draft_email("a@b.c", "Consulta expediente", "cuerpo", Ctx(OWNER))
     assert out["gmail_draft_created"] is False
     summaries = [a["summary"] for a in S.recent_activity(OWNER, 5)]
     assert not any(s.startswith("Created Gmail draft") for s in summaries), summaries
     assert any("Wrote draft text" in s for s in summaries), summaries
-    gmail.load_creds = lambda: object()
+    gmail.load_creds = lambda *a, **k: object()
 
 
 # --- F7: memory is data, with provenance ------------------------------------
@@ -391,6 +392,89 @@ def test_place_nudge_reconciles_before_creating_anything_new():
 def test_check_uncertain_actions_is_identity_gated():
     setup_module()
     assert tools.check_uncertain_actions(Ctx("mallory")).get("denied") is True
+
+
+# --- Per-user credentials: the real fix for F1/F2 ---------------------------
+def test_user_id_can_never_escape_into_a_secret_name_or_path():
+    for hostile in ("../../etc/passwd", "a/b", "alice; rm -rf /", "", None,
+                    "x" * 200, "../../../secrets/impetu-google-token-anna"):
+        assert google_auth.safe_user_key(hostile) is None, hostile
+    assert google_auth.safe_user_key("alice-2_x") == "alice-2_x"
+
+
+def test_case_variants_do_not_collide_onto_one_token():
+    # "Alice" and "alice" are different people to Firestore; they must not share
+    # a Google token. The id is refused, not normalised.
+    assert google_auth.safe_user_key("alice") == "alice"
+    assert google_auth.safe_user_key("Alice") is None
+
+
+def test_cached_personal_token_does_not_outlive_its_configuration():
+    """A stale cache must not keep granting access after the token is gone."""
+    import json
+    import pathlib
+    import tempfile
+    d = tempfile.mkdtemp()
+    (pathlib.Path(d) / "trudy.json").write_text(json.dumps({"token": "t"}))
+    old = google_auth.TOKEN_DIR
+    try:
+        google_auth.TOKEN_DIR = d
+        google_auth.forget_cached_tokens()
+        assert google_auth.has_personal_token("trudy") is True
+        (pathlib.Path(d) / "trudy.json").unlink()
+        google_auth.forget_cached_tokens()
+        assert google_auth.has_personal_token("trudy") is False
+    finally:
+        google_auth.TOKEN_DIR = old
+        google_auth.forget_cached_tokens()
+
+
+def test_a_personal_token_authorizes_its_owner_without_the_shared_grant(tmpdir=None):
+    import json
+    import tempfile
+    d = tempfile.mkdtemp()
+    (__import__("pathlib").Path(d) / "mallory.json").write_text(json.dumps(
+        {"token": "t", "refresh_token": "r", "client_id": "c", "client_secret": "s"}))
+    old_dir, old_owner = google_auth.TOKEN_DIR, os.environ.get("IMPETU_OWNER_USER_ID")
+    google_auth.TOKEN_DIR = d
+    google_auth.forget_cached_tokens()
+    os.environ["IMPETU_OWNER_USER_ID"] = OWNER
+    try:
+        assert google_auth.has_personal_token("mallory") is True
+        # mallory is NOT the owner, yet is allowed: the credential is her own.
+        assert identity.google_identity_check("mallory") is None
+        assert google_auth.credential_source("mallory") == google_auth.PERSONAL
+        # someone with no token of their own still needs the owner grant
+        assert identity.google_identity_check("trudy") is not None
+    finally:
+        google_auth.TOKEN_DIR = old_dir
+        # The cache is keyed on user id alone, which is right in production where
+        # the token location never moves - but it must not outlive this test.
+        google_auth.forget_cached_tokens()
+        if old_owner:
+            os.environ["IMPETU_OWNER_USER_ID"] = old_owner
+
+
+def test_identity_reaches_the_credential_lookup():
+    """user_id must travel all the way down, not die at the Google boundary."""
+    import inspect
+    assert "user_id" in inspect.signature(google_auth.load_creds).parameters
+    for fn in (gcal.create_event, gcal.get_event, gcal.list_today,
+               gmail.create_draft, gmail.search_messages, gmail.get_message,
+               gmail.find_draft_by_subject):
+        assert "user_id" in inspect.signature(fn).parameters, fn.__name__
+
+    seen = []
+    real = google_auth.load_creds
+    for mod in (gcal, gmail):
+        mod.load_creds = lambda uid=None, *a, **k: (seen.append(uid), object())[1]
+    try:
+        gcal.create_event("x", "2026-09-03T10:00:00", user_id="alice")
+        gmail.create_draft("a@b.c", "s", "b", user_id="alice")
+        assert seen == ["alice", "alice"], seen
+    finally:
+        gcal.load_creds = gmail.load_creds = real
+        _install()
 
 
 if __name__ == "__main__":

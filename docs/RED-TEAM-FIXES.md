@@ -11,19 +11,53 @@ way to the side effect, and must record what it created.**
 
 | variable | meaning | unset |
 |---|---|---|
-| `IMPETU_OWNER_USER_ID` | the one `user_id` allowed to reach the shared Google token | Gmail and Calendar are disabled entirely |
+| `IMPETU_TOKEN_SECRET_PREFIX` | Secret Manager prefix for per-person tokens (`impetu-google-token-`) | per-person tokens come only from `IMPETU_TOKEN_DIR` |
+| `IMPETU_TOKEN_DIR` | local directory of per-person tokens, for development | defaults to `tokens/` |
+| `IMPETU_OWNER_USER_ID` | the one `user_id` allowed to reach the **shared** token | anyone without a personal token gets no Google access |
 | `IMPETU_ACCESS_TOKEN` | required on the agent routes (`X-Impetu-Token` or bearer) | routes closed, unless the demo flag is set |
 | `IMPETU_PUBLIC_DEMO=1` | run the agent routes publicly, pinned to the `demo` profile | — |
 | `NUDGE_TOKEN` | authenticates the scheduler; now **required** | `/nudge` returns 503 |
 
 A missing binding is the absence of permission, never permission.
 
+## Per-person Google credentials
+
+This is the real fix for F1 and F2, and it is the audit's own thesis applied to
+the worst case: the identity now reaches the credential instead of dying just
+before it.
+
+`load_creds(user_id)` resolves that person's own token first - Secret Manager
+(`impetu-google-token-<user_id>`) in production, `tokens/<user_id>.json` for
+development - and only falls back to the shared token otherwise. `user_id` is
+threaded through every Gmail and Calendar function to that lookup, so a call can
+no longer reach Google without saying who it is for.
+
+The guard follows: someone who connected their own account needs no grant at all,
+because the side effect lands on their own calendar and their own inbox and there
+is no deputy to confuse. `IMPETU_OWNER_USER_ID` now governs only the shared-token
+fallback. `setup_gmail.py <user_id>` performs the per-person consent.
+
+Two things the caller-supplied `user_id` must never do, both tested:
+
+- **Escape into a path or a secret name.** `safe_user_key` allows only
+  `[a-z0-9][a-z0-9_-]{0,62}`; anything else has no personal token. Without this,
+  adding per-user paths would have introduced a traversal the original code did
+  not have.
+- **Collide.** The id is refused rather than normalised, because lowercasing would
+  map `Alice` and `alice` - two different people to Firestore - onto one Google
+  token, recreating the exact defect in miniature.
+
+Resolving a personal token can mean a Secret Manager round trip and the guard runs
+on every Google tool call, so lookups are cached for 60 seconds, with
+`forget_cached_tokens()` for the connect flow.
+
 ## Patches by finding
 
 **F1 — unauthenticated access to the token owner's Google account.**
 `search_email`, `read_email`, `get_today_schedule` and `schedule_reminder` now
 take `tool_context` like every other tool, and all four call `_google_guard`,
-which resolves the session user and compares it to `IMPETU_OWNER_USER_ID`
+which resolves the session user, admits them outright if they have their own
+token, and otherwise compares them to `IMPETU_OWNER_USER_ID`
 (`agent/identity.py`). A session acting for anyone else is refused with a plain
 reason. Separately, a middleware in `server/main.py` gates the ADK routes: with
 `IMPETU_ACCESS_TOKEN` set it requires the token in constant time; with
@@ -103,8 +137,11 @@ action without calling it first.
 ## Verification
 
 `tests/test_red_team.py` replays each original attack and asserts it now fails —
-24 tests, all passing. Each was checked as a negative control: reverting the fix
-turns the corresponding tests red, so they can actually fail. It fakes Google at the transport boundary only, so the real
+29 tests, all passing, and passing in randomised order so no test depends on
+another's leftovers. Each was checked as a negative control: reverting the fix
+turns the corresponding tests red, so they can actually fail. Reverting the
+identity threading, for instance, produced `[None, 'alice']` - the discontinuity
+reappearing in `gcal` while `gmail` still carried it. It fakes Google at the transport boundary only, so the real
 `gcal`, `gmail`, `state`, `nudge`, `tools` and `server.main` code paths execute,
 and the fake keeps the real world separate from the response so F5 stays
 observable.
@@ -115,12 +152,17 @@ python3 tests/test_red_team.py
 
 ## What remains open
 
-- **Per-user Google credentials.** The real fix for F1 and F2 is one OAuth token
-  per person. Until then the deployment is genuinely single-tenant, and the owner
-  guard makes that explicit and enforced rather than implicit and exploitable.
-- **Real caller authentication.** `IMPETU_ACCESS_TOKEN` is a shared secret, not
-  per-user identity. A production deployment wants IAP or an identity provider in
-  front of the agent routes.
+- **Real caller authentication.** This is now the largest remaining gap.
+  `IMPETU_ACCESS_TOKEN` is a shared secret, not per-user identity, so the system
+  still trusts whatever `user_id` a permitted caller claims. Per-person tokens
+  bound the damage - a caller claiming someone else's id cannot reach that
+  person's Google account without their token - but Firestore state is still
+  addressed by an unverified id. A production deployment wants IAP or an identity
+  provider in front of the agent routes, and that is an infrastructure decision,
+  not a code change.
+- **Nobody has connected a personal token yet.** The mechanism is tested, but the
+  deployment described in the README still runs on the shared token, so it remains
+  single-tenant in practice until `setup_gmail.py <user_id>` is run per person.
 - **Gmail reconciliation is best-effort.** Matching on subject cannot distinguish
   two drafts with the same subject. Resolving by id would need Gmail to return one
   before the response is lost, which it cannot.

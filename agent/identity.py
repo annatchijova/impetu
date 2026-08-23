@@ -13,15 +13,21 @@ Until ÍMPETU stores per-user OAuth tokens, that single token means the deployme
 is single-tenant, and this module makes that explicit and enforced instead of
 implicit and exploitable:
 
-  IMPETU_OWNER_USER_ID   the one user_id permitted to reach Google.
+  IMPETU_OWNER_USER_ID   the one user_id permitted to reach the SHARED token.
 
-Fail-closed: if it is unset, no Google side effect is allowed at all. A missing
-binding is not permission, it is the absence of permission.
+Someone with their own connected token (see `google_auth.load_creds`) needs no
+such permission - the credential is theirs, so there is no deputy to confuse.
+
+Fail-closed otherwise: with no personal token and no owner configured, no Google
+side effect is allowed at all. A missing binding is not permission, it is the
+absence of permission.
 """
 
 from __future__ import annotations
 
 import os
+
+from .google_auth import has_personal_token
 
 ENV_OWNER = "IMPETU_OWNER_USER_ID"
 
@@ -38,18 +44,28 @@ def owner_user_id():
 def google_identity_check(user_id):
     """Return None if `user_id` may use the shared Google token, else a reason.
 
-    The shared token authenticates exactly one Google account. Anyone else
-    reaching it is a confused deputy: their read answers from the owner's inbox
-    and their write lands on the owner's calendar.
+    Someone who connected their OWN Google account needs no further permission:
+    the credential is theirs, so the side effect lands on their own calendar and
+    their own inbox, and the identity discontinuity this guard exists to cover
+    simply is not there.
+
+    Everyone else falls back to the SHARED token, which authenticates exactly one
+    Google account. Anyone but its owner reaching it is a confused deputy: their
+    read answers from the owner's inbox and their write lands on the owner's
+    calendar.
     """
+    if not user_id:
+        return "Google actions need a resolved user id; this session has none."
+    if has_personal_token(user_id):
+        return None
+
     owner = owner_user_id()
     if owner is None:
         return (
-            f"Google actions are disabled: {ENV_OWNER} is not set, so this "
-            "deployment cannot prove whose account the shared token belongs to."
+            f"Google actions are disabled: this person has not connected their own "
+            f"Google account, and {ENV_OWNER} is not set, so the deployment cannot "
+            "prove whose account the shared token belongs to."
         )
-    if not user_id:
-        return "Google actions need a resolved user id; this session has none."
     if user_id != owner:
         return (
             "Google actions are limited to the account that owns the connected "

@@ -28,14 +28,14 @@ def _build_raw(to: str, subject: str, body: str) -> str:
     return base64.urlsafe_b64encode(msg.as_bytes()).decode()
 
 
-def create_draft(to: str, subject: str, body: str) -> dict:
+def create_draft(to: str, subject: str, body: str, user_id=None) -> dict:
     """Create a Gmail draft.
 
     Returns `{created, status, draft_id?}`. `status` is outcome.DONE / FAILED /
     UNKNOWN; UNKNOWN means the draft may have been created even though we did not
     get the answer, so it must never be reported as "it did not happen".
     """
-    creds = load_creds()
+    creds = load_creds(user_id)
     if creds is None:
         return {
             "created": False,
@@ -62,7 +62,7 @@ def create_draft(to: str, subject: str, body: str) -> dict:
         return res
 
 
-def find_draft_by_subject(subject: str) -> dict:
+def find_draft_by_subject(subject: str, user_id=None) -> dict:
     """Best-effort: is there a draft with this subject?
 
     When a draft creation loses its response we never learn the draft id, so an
@@ -70,7 +70,7 @@ def find_draft_by_subject(subject: str) -> dict:
     matches on subject, so identical subjects are indistinguishable - the caller
     must treat a hit as "probably yes", not proof. See docs/RED-TEAM.md F5.
     """
-    creds = load_creds()
+    creds = load_creds(user_id)
     if creds is None:
         return {"ok": False, "reason": "Gmail not connected."}
     try:
@@ -103,12 +103,12 @@ def _extract_plain(payload: dict) -> str:
     return ""
 
 
-def search_messages(query: str, max_results: int = 5) -> dict:
+def search_messages(query: str, max_results: int = 5, user_id=None) -> dict:
     """Search the person's own inbox. Returns matches (from, subject, date, snippet).
 
     Read-only: this only looks; it never sends, deletes, or changes anything.
     """
-    creds = load_creds()
+    creds = load_creds(user_id)
     if creds is None:
         return {"ok": False, "reason": "Gmail not connected - re-authorize to add the read scope."}
     try:
@@ -138,9 +138,9 @@ def search_messages(query: str, max_results: int = 5) -> dict:
         return outcome.failure(exc, "Gmail read error (is the readonly scope authorized?)")
 
 
-def get_message(message_id: str) -> dict:
+def get_message(message_id: str, user_id=None) -> dict:
     """Read the full plain-text body of one message (by id from search_messages)."""
-    creds = load_creds()
+    creds = load_creds(user_id)
     if creds is None:
         return {"ok": False, "reason": "Gmail not connected - re-authorize to add the read scope."}
     try:

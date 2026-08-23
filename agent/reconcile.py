@@ -31,9 +31,9 @@ def reconcile_pending(store, user_id: str, limit: int = 10) -> dict:
         kind = item.get("kind")
 
         if kind == "calendar_event" and not external_id.startswith(PENDING_PREFIX):
-            look = gcal.get_event(external_id)
+            look = gcal.get_event(external_id, user_id=user_id)
         elif kind == "gmail_draft":
-            look = gmail.find_draft_by_subject(item.get("detail", ""))
+            look = gmail.find_draft_by_subject(item.get("detail", ""), user_id=user_id)
         else:
             still_unknown += 1
             continue

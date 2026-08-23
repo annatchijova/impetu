@@ -53,7 +53,7 @@ def place_nudge(user_id: str, when_iso: str, day_key: str = "") -> dict:
     day = day_key or when_iso[:10]
     key = f"nudge|{user_id}|{nudge.get('task_id') or nudge['title']}|{day}"
     result = gcal.create_event(nudge["title"], when_iso, description=nudge["body"],
-                               idempotency_key=key)
+                               idempotency_key=key, user_id=user_id)
     # Record what we created out in the world, so a later run can tell whether
     # this already happened instead of guessing. See docs/RED-TEAM.md F9.
     _store.record_side_effect(user_id, "calendar_event", result.get("event_id", ""),
