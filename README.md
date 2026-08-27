@@ -84,6 +84,8 @@ The **LLM is in the decision path** by design here: Gemini reasons about your si
 and picks the action. Everything consequential — your memory, your drafts, your reminders
 — lives in Google Cloud, not on your machine.
 
+![ÍMPETU architecture — interactive path and proactive loop](docs/architecture.svg)
+
 ```
 You (chat / browser)
       → Cloud Run (ADK server)

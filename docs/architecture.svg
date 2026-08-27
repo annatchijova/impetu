@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="860" viewBox="0 0 1000 860" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-end">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5B544A"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-end">
+      <path d="M0,0 L10,5 L0,10 z" fill="#BE7A16"/>
+    </marker>
+  </defs>
+
+  <!-- background -->
+  <rect x="0" y="0" width="1000" height="860" fill="#F5F3ED"/>
+
+  <!-- title -->
+  <text x="500" y="52" text-anchor="middle" font-size="30" font-weight="700" fill="#221E19" font-family="Palatino, Georgia, serif">&#205;MPETU &#8212; Architecture</text>
+  <text x="500" y="78" text-anchor="middle" font-size="15" fill="#5B544A">A collaborative agent for autistic and ADHD minds &#183; everything consequential lives in Google Cloud</text>
+
+  <!-- Google Cloud enclosure -->
+  <rect x="40" y="150" width="920" height="560" rx="16" fill="none" stroke="#D6CEBE" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="58" y="176" font-size="13" font-weight="700" fill="#8B8375" letter-spacing="1">GOOGLE CLOUD</text>
+
+  <!-- ================= INTERACTIVE PATH ================= -->
+  <text x="500" y="122" text-anchor="middle" font-size="13" font-weight="700" fill="#1F5A52" letter-spacing="1.5">INTERACTIVE PATH</text>
+
+  <!-- User -->
+  <rect x="370" y="132" width="260" height="52" rx="10" fill="#FCFBF7" stroke="#D6CEBE" stroke-width="1.5"/>
+  <text x="500" y="163" text-anchor="middle" font-size="16" font-weight="600" fill="#221E19">User &#183; chat / browser</text>
+
+  <!-- Cloud Run -->
+  <rect x="370" y="212" width="260" height="60" rx="10" fill="#E0EBE7" stroke="#1F5A52" stroke-width="1.5"/>
+  <text x="500" y="238" text-anchor="middle" font-size="16" font-weight="700" fill="#16433C">Cloud Run</text>
+  <text x="500" y="258" text-anchor="middle" font-size="13" fill="#5B544A">ADK FastAPI server</text>
+
+  <!-- Secret Manager (side) -->
+  <rect x="700" y="212" width="230" height="60" rx="10" fill="#FCFBF7" stroke="#D6CEBE" stroke-width="1.5"/>
+  <text x="815" y="238" text-anchor="middle" font-size="15" font-weight="600" fill="#221E19">Secret Manager</text>
+  <text x="815" y="258" text-anchor="middle" font-size="12" fill="#5B544A">Gmail / Calendar OAuth token</text>
+
+  <!-- Vertex / Gemini -->
+  <rect x="370" y="300" width="260" height="60" rx="10" fill="#E0EBE7" stroke="#1F5A52" stroke-width="1.5"/>
+  <text x="500" y="326" text-anchor="middle" font-size="16" font-weight="700" fill="#16433C">Vertex AI &#183; Gemini 3.5</text>
+  <text x="500" y="346" text-anchor="middle" font-size="13" fill="#5B544A">reasons &#183; decides the action</text>
+
+  <!-- Tools container -->
+  <rect x="120" y="392" width="760" height="128" rx="12" fill="#FCFBF7" stroke="#D6CEBE" stroke-width="1.5"/>
+  <text x="500" y="414" text-anchor="middle" font-size="13" font-weight="700" fill="#8B8375" letter-spacing="1">TOOLS (ADK)</text>
+
+  <rect x="150" y="428" width="220" height="76" rx="9" fill="#F5F3ED" stroke="#D6CEBE" stroke-width="1.2"/>
+  <text x="260" y="456" text-anchor="middle" font-size="15" font-weight="600" fill="#221E19">10 function tools</text>
+  <text x="260" y="476" text-anchor="middle" font-size="12" fill="#5B544A">memory, draft, schedule,</text>
+  <text x="260" y="492" text-anchor="middle" font-size="12" fill="#5B544A">read day, inbox search</text>
+
+  <rect x="390" y="428" width="220" height="76" rx="9" fill="#F5F3ED" stroke="#D6CEBE" stroke-width="1.2"/>
+  <text x="500" y="456" text-anchor="middle" font-size="15" font-weight="600" fill="#221E19">google_search</text>
+  <text x="500" y="476" text-anchor="middle" font-size="12" fill="#5B544A">grounding &#8212; looks up</text>
+  <text x="500" y="492" text-anchor="middle" font-size="12" fill="#5B544A">real facts, never invents</text>
+
+  <rect x="630" y="428" width="220" height="76" rx="9" fill="#F5F3ED" stroke="#D6CEBE" stroke-width="1.2"/>
+  <text x="740" y="456" text-anchor="middle" font-size="15" font-weight="600" fill="#221E19">2 sub-agents</text>
+  <text x="740" y="476" text-anchor="middle" font-size="12" fill="#5B544A">decomposer + drafter</text>
+  <text x="740" y="492" text-anchor="middle" font-size="12" fill="#5B544A">(one voice to the user)</text>
+
+  <!-- Side-effect / state layer -->
+  <rect x="150" y="560" width="220" height="66" rx="10" fill="#FCFBF7" stroke="#1F5A52" stroke-width="1.5"/>
+  <text x="260" y="588" text-anchor="middle" font-size="15" font-weight="700" fill="#16433C">Firestore</text>
+  <text x="260" y="608" text-anchor="middle" font-size="12" fill="#5B544A">durable working memory</text>
+
+  <rect x="390" y="560" width="220" height="66" rx="10" fill="#FCFBF7" stroke="#BE7A16" stroke-width="1.5"/>
+  <text x="500" y="588" text-anchor="middle" font-size="15" font-weight="700" fill="#8a5810">Gmail API</text>
+  <text x="500" y="608" text-anchor="middle" font-size="12" fill="#5B544A">draft in your voice (never sends)</text>
+
+  <rect x="630" y="560" width="220" height="66" rx="10" fill="#FCFBF7" stroke="#BE7A16" stroke-width="1.5"/>
+  <text x="740" y="588" text-anchor="middle" font-size="15" font-weight="700" fill="#8a5810">Calendar API</text>
+  <text x="740" y="608" text-anchor="middle" font-size="12" fill="#5B544A">read day &#183; notifying reminders</text>
+
+  <!-- arrows interactive -->
+  <line x1="500" y1="184" x2="500" y2="210" stroke="#5B544A" stroke-width="2" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  <line x1="500" y1="272" x2="500" y2="298" stroke="#5B544A" stroke-width="2" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  <line x1="630" y1="242" x2="698" y2="242" stroke="#5B544A" stroke-width="1.6" marker-end="url(#arrow)"/>
+  <line x1="500" y1="360" x2="500" y2="390" stroke="#5B544A" stroke-width="2" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  <line x1="260" y1="504" x2="260" y2="558" stroke="#5B544A" stroke-width="1.8" marker-end="url(#arrow)" marker-start="url(#arrow)"/>
+  <line x1="500" y1="504" x2="500" y2="558" stroke="#5B544A" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <line x1="740" y1="504" x2="740" y2="558" stroke="#5B544A" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- ================= PROACTIVE LOOP ================= -->
+  <text x="500" y="662" text-anchor="middle" font-size="13" font-weight="700" fill="#BE7A16" letter-spacing="1.5">PROACTIVE LOOP &#8212; runs daily with your computer off</text>
+
+  <rect x="60" y="676" width="190" height="56" rx="10" fill="#F3E7CE" stroke="#BE7A16" stroke-width="1.5"/>
+  <text x="155" y="700" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5810">Cloud Scheduler</text>
+  <text x="155" y="719" text-anchor="middle" font-size="12" fill="#5B544A">daily 10:00 (AR)</text>
+
+  <rect x="308" y="676" width="190" height="56" rx="10" fill="#E0EBE7" stroke="#1F5A52" stroke-width="1.5"/>
+  <text x="403" y="700" text-anchor="middle" font-size="14" font-weight="700" fill="#16433C">Cloud Run /nudge</text>
+  <text x="403" y="719" text-anchor="middle" font-size="12" fill="#5B544A">shared-secret header</text>
+
+  <rect x="556" y="676" width="190" height="56" rx="10" fill="#FCFBF7" stroke="#1F5A52" stroke-width="1.5"/>
+  <text x="651" y="700" text-anchor="middle" font-size="14" font-weight="700" fill="#16433C">Firestore</text>
+  <text x="651" y="719" text-anchor="middle" font-size="12" fill="#5B544A">your open task</text>
+
+  <rect x="804" y="676" width="150" height="56" rx="10" fill="#FCFBF7" stroke="#BE7A16" stroke-width="1.5"/>
+  <text x="879" y="700" text-anchor="middle" font-size="14" font-weight="700" fill="#8a5810">Calendar</text>
+  <text x="879" y="719" text-anchor="middle" font-size="12" fill="#5B544A">notifies you</text>
+
+  <line x1="250" y1="704" x2="306" y2="704" stroke="#BE7A16" stroke-width="2" marker-end="url(#arrow-amber)"/>
+  <line x1="498" y1="704" x2="554" y2="704" stroke="#BE7A16" stroke-width="2" marker-end="url(#arrow-amber)"/>
+  <line x1="746" y1="704" x2="802" y2="704" stroke="#BE7A16" stroke-width="2" marker-end="url(#arrow-amber)"/>
+
+  <!-- footer note -->
+  <text x="500" y="792" text-anchor="middle" font-size="13" fill="#5B544A" font-style="italic">The LLM is in the decision path by design; every tool reports honestly whether its side effect actually happened.</text>
+  <text x="500" y="826" text-anchor="middle" font-size="12" fill="#8B8375">Track: Collaborative Partner &#183; All Things Agentic Hackathon</text>
+</svg>
