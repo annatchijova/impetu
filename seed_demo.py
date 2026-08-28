@@ -12,9 +12,13 @@ GOOGLE_CLOUD_PROJECT / ADC like the app).
 """
 from __future__ import annotations
 
+import os
+
 from agent.state import Store
 
-DEMO_USER = "demo"
+# Must match server.main._DEMO_USER so the seeded profile is the one the public
+# demo (and the ADK dev-ui, which uses "user") actually reads and writes.
+DEMO_USER = os.environ.get("IMPETU_DEMO_USER", "user")
 
 # Newest last: recent_activity() returns newest-first, so a judge reads the most
 # recent move at the top. This mirrors one real session's side effects.

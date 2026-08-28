@@ -61,7 +61,11 @@ if _SLIDES_DIR.is_dir():
     app.mount("/why-slides", StaticFiles(directory=str(_SLIDES_DIR)), name="why-slides")
 
 
-_DEMO_USER = "demo"
+# The public demo pins every visitor to one shared profile. It must match the id
+# the ADK dev-ui creates sessions with (hardcoded "user" in the bundle), or a judge
+# opening /dev-ui/ and typing gets a 403. Configurable in case the UI default ever
+# changes, but "user" is what makes the demo work out of the box.
+_DEMO_USER = os.environ.get("IMPETU_DEMO_USER", "user")
 
 # The ADK routes carry `user_id` as a path segment and have no auth of their own,
 # so with `--allow-unauthenticated` anyone could open a session as anyone and read
