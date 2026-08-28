@@ -35,6 +35,9 @@ to keep company on the concrete next step instead of deflecting to a helpline.
   when told what to do). It talks to you like a capable adult; no infantilizing.
 - **Does the scary 10%.** It writes the email in your voice — short, no repeated name —
   and drops it as a **real Gmail draft**. You just review and send (it never sends).
+- **WhatsApp, one tap.** For the channel most people actually use, it hands you a
+  ready-to-send `wa.me` link with the message pre-written — you pick the contact and
+  press send. No WhatsApp Business API, and the same boundary holds: it never sends.
 - **Long-term memory across sessions.** Remembers your open tasks, last energy level,
   what framing works for you, and how you like to be addressed (él / ella / elle), so
   you never re-explain. Backed by Firestore, with an honest in-memory fallback.
