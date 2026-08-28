@@ -26,8 +26,9 @@ Auth is **Vertex AI**, not the AI Studio API key: the free tier is 20 requests/d
 too little for development. `.env` sets `GOOGLE_GENAI_USE_VERTEXAI=TRUE`, the project,
 and `GOOGLE_CLOUD_LOCATION=global` (Gemini 3.5 lives on the global Vertex endpoint).
 
-There is no unit-test suite yet. **Verify any change to the agent by running a real
-turn** and reading the output — do not claim it works from inspection. For prompt or
+Security regressions have a suite: `python3 tests/test_red_team.py` (29 tests).
+Run it after touching identity, tools, state, or the server. Beyond that,
+**verify any change to the agent by running a real turn** and reading the output — do not claim it works from inspection. For prompt or
 memory changes, run a *two-turn, same-session* check (see `try_it.py`) to confirm the
 agent adapts (e.g. captures él/ella/elle and uses it).
 
@@ -60,6 +61,20 @@ one is a regression even if it "reads nicer":
    happened (`persisted`, `gmail_draft_created`, ...). Never fake success.
 6. **Respect address preference.** Use the stored él/ella/elle; never slash forms
    like "bloqueado/a".
+7. **One identity per operation.** Every tool that reaches Gmail or Calendar takes
+   `tool_context`, passes `_google_guard`, and forwards `user_id` all the way to
+   `load_creds` so the credential itself is that person's. Never add a side-effect
+   tool that does not carry the caller's identity to the side effect, and never
+   drop a logical id (`task_id`, a note's key) before the boundary where it
+   matters. A caller-supplied id never reaches a path or a secret name unchecked -
+   use `google_auth.safe_user_key`. See `docs/RED-TEAM.md`.
+8. **Three outcome states, not two.** Use `agent/outcome.py`. Reporting UNKNOWN as
+   FAILED is a false negative and makes the agent redo real side effects. Record
+   every side effect's external id, and reconcile the uncertain ones rather than
+   guessing (`agent/reconcile.py`).
+9. **Recalled memory is data, not instruction.** It renders into the prompt with
+   its key and `source` intact, inside the DATA block. Never concatenate stored
+   strings onto the system instruction.
 
 ## Conventions
 

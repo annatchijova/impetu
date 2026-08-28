@@ -16,6 +16,7 @@ from __future__ import annotations
 import base64
 from email.message import EmailMessage
 
+from . import outcome
 from .google_auth import is_connected, load_creds  # noqa: F401 - re-exported for callers
 
 
@@ -27,12 +28,18 @@ def _build_raw(to: str, subject: str, body: str) -> str:
     return base64.urlsafe_b64encode(msg.as_bytes()).decode()
 
 
-def create_draft(to: str, subject: str, body: str) -> dict:
-    """Create a Gmail draft. Returns {created, draft_id?} or {created: False, reason}."""
-    creds = load_creds()
+def create_draft(to: str, subject: str, body: str, user_id=None) -> dict:
+    """Create a Gmail draft.
+
+    Returns `{created, status, draft_id?}`. `status` is outcome.DONE / FAILED /
+    UNKNOWN; UNKNOWN means the draft may have been created even though we did not
+    get the answer, so it must never be reported as "it did not happen".
+    """
+    creds = load_creds(user_id)
     if creds is None:
         return {
             "created": False,
+            "status": outcome.FAILED,
             "reason": "Gmail not connected yet - run setup_gmail.py once to authorize.",
         }
     try:
@@ -46,9 +53,41 @@ def create_draft(to: str, subject: str, body: str) -> dict:
             .create(userId="me", body={"message": {"raw": raw}})
             .execute()
         )
-        return {"created": True, "draft_id": draft.get("id")}
+        return {"created": True, "status": outcome.DONE, "draft_id": draft.get("id")}
     except Exception as exc:  # noqa: BLE001 - report failure honestly, never crash
-        return {"created": False, "reason": f"Gmail API error: {exc}"}
+        res = outcome.failure(exc, "Gmail API error")
+        # `created` stays False for backwards compatibility, but `status` tells
+        # the truth: UNKNOWN means a draft may exist. See docs/RED-TEAM.md F5.
+        res["created"] = False
+        return res
+
+
+def find_draft_by_subject(subject: str, user_id=None) -> dict:
+    """Best-effort: is there a draft with this subject?
+
+    When a draft creation loses its response we never learn the draft id, so an
+    id lookup is impossible and this is the only way back to the truth. It
+    matches on subject, so identical subjects are indistinguishable - the caller
+    must treat a hit as "probably yes", not proof. See docs/RED-TEAM.md F5.
+    """
+    creds = load_creds(user_id)
+    if creds is None:
+        return {"ok": False, "reason": "Gmail not connected."}
+    try:
+        from googleapiclient.discovery import build
+
+        svc = build("gmail", "v1", credentials=creds, cache_discovery=False)
+        listing = svc.users().drafts().list(userId="me", maxResults=50).execute()
+        wanted = (subject or "").strip()
+        for d in listing.get("drafts", []) or []:
+            full = svc.users().drafts().get(userId="me", id=d["id"], format="metadata").execute()
+            headers = full.get("message", {}).get("payload", {}).get("headers", [])
+            got = next((h["value"] for h in headers if h.get("name") == "Subject"), "")
+            if got.strip() == wanted:
+                return {"ok": True, "exists": True, "draft_id": d["id"]}
+        return {"ok": True, "exists": False}
+    except Exception as exc:  # noqa: BLE001
+        return outcome.failure(exc, "Gmail draft lookup error")
 
 
 def _extract_plain(payload: dict) -> str:
@@ -64,12 +103,12 @@ def _extract_plain(payload: dict) -> str:
     return ""
 
 
-def search_messages(query: str, max_results: int = 5) -> dict:
+def search_messages(query: str, max_results: int = 5, user_id=None) -> dict:
     """Search the person's own inbox. Returns matches (from, subject, date, snippet).
 
     Read-only: this only looks; it never sends, deletes, or changes anything.
     """
-    creds = load_creds()
+    creds = load_creds(user_id)
     if creds is None:
         return {"ok": False, "reason": "Gmail not connected - re-authorize to add the read scope."}
     try:
@@ -96,12 +135,12 @@ def search_messages(query: str, max_results: int = 5) -> dict:
             })
         return {"ok": True, "count": len(results), "results": results}
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "reason": f"Gmail read error (is the readonly scope authorized?): {exc}"}
+        return outcome.failure(exc, "Gmail read error (is the readonly scope authorized?)")
 
 
-def get_message(message_id: str) -> dict:
+def get_message(message_id: str, user_id=None) -> dict:
     """Read the full plain-text body of one message (by id from search_messages)."""
-    creds = load_creds()
+    creds = load_creds(user_id)
     if creds is None:
         return {"ok": False, "reason": "Gmail not connected - re-authorize to add the read scope."}
     try:
@@ -118,4 +157,4 @@ def get_message(message_id: str) -> dict:
             "body": body[:4000],
         }
     except Exception as exc:  # noqa: BLE001
-        return {"ok": False, "reason": f"Gmail read error: {exc}"}
+        return outcome.failure(exc, "Gmail read error")

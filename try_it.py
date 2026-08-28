@@ -6,6 +6,13 @@
 
 Prints the agent's words and, indented, every tool it calls - so you can see it
 externalize your working memory in real time.
+
+Gmail and Calendar are gated on IMPETU_OWNER_USER_ID (see docs/RED-TEAM.md), so
+to exercise them locally set it to the USER below:
+
+    IMPETU_OWNER_USER_ID=anna python3 try_it.py "..."
+
+Without it the agent still runs; it just reports those tools as unavailable.
 """
 
 from __future__ import annotations
