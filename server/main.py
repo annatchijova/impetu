@@ -21,6 +21,7 @@ from fastapi import Header, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from google.adk.cli.fast_api import get_fast_api_app
 from starlette.routing import Route
+from starlette.staticfiles import StaticFiles
 
 from agent import nudge as nudge_mod
 from agent.identity import ENV_OWNER, owner_user_id
@@ -51,6 +52,13 @@ async def _landing(_request) -> HTMLResponse:
 
 
 app.router.routes.insert(0, Route("/", _landing, methods=["GET"]))
+
+# Static assets for the landing page (the "Why it matters" slide deck + its PDF).
+# The landing references them at /why-slides/...; without this mount they 404 in
+# production. Not gated: they are public marketing assets, no user data.
+_SLIDES_DIR = Path(__file__).resolve().parent.parent / "docs" / "why-slides"
+if _SLIDES_DIR.is_dir():
+    app.mount("/why-slides", StaticFiles(directory=str(_SLIDES_DIR)), name="why-slides")
 
 
 _DEMO_USER = "demo"

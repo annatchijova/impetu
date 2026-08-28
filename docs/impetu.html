@@ -393,6 +393,7 @@
       <span class="chip live"><span class="dot"></span><span data-lang="en">Live on Google Cloud</span><span data-lang="es">Vivo en Google Cloud</span></span>
       <span class="chip"><a href="https://impetu-brkvglmi2a-uc.a.run.app">impetu-brkvglmi2a-uc.a.run.app</a></span>
       <span class="chip"><a href="#demo-path"><span data-lang="en">Jump to demo path</span><span data-lang="es">Ir a la demo</span></a></span>
+      <span class="chip"><a href="#why"><span data-lang="en">Why it matters</span><span data-lang="es">Por qué importa</span></a></span>
       <span class="chip">Gemini 3.5 · ADK · Cloud Run</span>
       <span class="chip">Apache-2.0</span>
     </div>
@@ -546,6 +547,64 @@
   </div>
 </header>
 
+<section id="why">
+  <style>
+    #why .deck-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:6px}
+    #why .deck-thumb{padding:0;margin:0;border:1px solid var(--line-strong);border-radius:10px;overflow:hidden;background:var(--panel);cursor:zoom-in;transition:transform .12s ease,box-shadow .12s ease;display:block}
+    #why .deck-thumb:hover,#why .deck-thumb:focus-visible{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.14);outline:none;border-color:var(--teal)}
+    #why .deck-thumb img{display:block;width:100%;height:auto}
+    #why .deck-dl{margin-top:20px;font-size:15px}
+    #why .deck-dl a{color:var(--teal);font-weight:600;text-decoration:none;border-bottom:1px solid var(--line-strong)}
+    #why .deck-dl a:hover{border-color:var(--teal)}
+    #deck-lb{position:fixed;inset:0;background:rgba(24,20,16,.88);display:none;align-items:center;justify-content:center;z-index:1000}
+    #deck-lb.open{display:flex}
+    #deck-lb img{max-width:92vw;max-height:82vh;border-radius:8px;box-shadow:0 12px 48px rgba(0,0,0,.5)}
+    #deck-lb .lb-btn{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.14);color:#fff;border:none;font-size:30px;width:52px;height:52px;border-radius:50%;cursor:pointer;line-height:1}
+    #deck-lb .lb-btn:hover{background:rgba(255,255,255,.26)}
+    #deck-lb .lb-prev{left:18px}
+    #deck-lb .lb-next{right:18px}
+    #deck-lb .lb-close{position:absolute;top:16px;right:22px;background:none;border:none;color:#fff;font-size:36px;cursor:pointer;line-height:1}
+    #deck-lb .lb-count{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:#fff;font-size:14px;letter-spacing:1px;opacity:.85}
+    @media(max-width:520px){#deck-lb .lb-btn{width:42px;height:42px;font-size:24px}#why .deck-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+  </style>
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="eyebrow"><span data-lang="en">Why it matters</span><span data-lang="es">Por qué importa</span></p>
+      <h2><span data-lang="en">The case for ÍMPETU, in slides</span><span data-lang="es">El caso de ÍMPETU, en slides</span></h2>
+      <p><span data-lang="en">The short pitch — the problem, who it is for, and why lowering the energy to start matters. Click any slide to enlarge; use the arrows or your keyboard to move through the deck.</span><span data-lang="es">El pitch corto — el problema, para quién es, y por qué bajar la energía de arranque importa. Hacé click en cualquier slide para ampliarla; usá las flechas o el teclado para recorrer el deck.</span></p>
+    </div>
+    <div class="deck-grid" id="deck-grid">
+      <button class="deck-thumb" data-i="0" aria-label="Slide 1"><img loading="lazy" src="why-slides/slide-01.png" alt="Slide 1"></button>
+      <button class="deck-thumb" data-i="1" aria-label="Slide 2"><img loading="lazy" src="why-slides/slide-02.png" alt="Slide 2"></button>
+      <button class="deck-thumb" data-i="2" aria-label="Slide 3"><img loading="lazy" src="why-slides/slide-03.png" alt="Slide 3"></button>
+      <button class="deck-thumb" data-i="3" aria-label="Slide 4"><img loading="lazy" src="why-slides/slide-04.png" alt="Slide 4"></button>
+      <button class="deck-thumb" data-i="4" aria-label="Slide 5"><img loading="lazy" src="why-slides/slide-05.png" alt="Slide 5"></button>
+      <button class="deck-thumb" data-i="5" aria-label="Slide 6"><img loading="lazy" src="why-slides/slide-06.png" alt="Slide 6"></button>
+      <button class="deck-thumb" data-i="6" aria-label="Slide 7"><img loading="lazy" src="why-slides/slide-07.png" alt="Slide 7"></button>
+      <button class="deck-thumb" data-i="7" aria-label="Slide 8"><img loading="lazy" src="why-slides/slide-08.png" alt="Slide 8"></button>
+      <button class="deck-thumb" data-i="8" aria-label="Slide 9"><img loading="lazy" src="why-slides/slide-09.png" alt="Slide 9"></button>
+      <button class="deck-thumb" data-i="9" aria-label="Slide 10"><img loading="lazy" src="why-slides/slide-10.png" alt="Slide 10"></button>
+      <button class="deck-thumb" data-i="10" aria-label="Slide 11"><img loading="lazy" src="why-slides/slide-11.png" alt="Slide 11"></button>
+      <button class="deck-thumb" data-i="11" aria-label="Slide 12"><img loading="lazy" src="why-slides/slide-12.png" alt="Slide 12"></button>
+      <button class="deck-thumb" data-i="12" aria-label="Slide 13"><img loading="lazy" src="why-slides/slide-13.png" alt="Slide 13"></button>
+      <button class="deck-thumb" data-i="13" aria-label="Slide 14"><img loading="lazy" src="why-slides/slide-14.png" alt="Slide 14"></button>
+      <button class="deck-thumb" data-i="14" aria-label="Slide 15"><img loading="lazy" src="why-slides/slide-15.png" alt="Slide 15"></button>
+      <button class="deck-thumb" data-i="15" aria-label="Slide 16"><img loading="lazy" src="why-slides/slide-16.png" alt="Slide 16"></button>
+      <button class="deck-thumb" data-i="16" aria-label="Slide 17"><img loading="lazy" src="why-slides/slide-17.png" alt="Slide 17"></button>
+      <button class="deck-thumb" data-i="17" aria-label="Slide 18"><img loading="lazy" src="why-slides/slide-18.png" alt="Slide 18"></button>
+    </div>
+    <p class="deck-dl"><a href="why-slides/impetu-why-it-matters.pdf" target="_blank" rel="noopener"><span data-lang="en">Download the full deck (PDF)</span><span data-lang="es">Descargar el deck completo (PDF)</span></a></p>
+  </div>
+</section>
+
+<div id="deck-lb" role="dialog" aria-modal="true" aria-label="Slide viewer">
+  <button class="lb-close" aria-label="Close" type="button">&times;</button>
+  <button class="lb-btn lb-prev" aria-label="Previous slide" type="button">&#8249;</button>
+  <img id="lb-img" src="" alt="">
+  <button class="lb-btn lb-next" aria-label="Next slide" type="button">&#8250;</button>
+  <div class="lb-count" id="lb-count"></div>
+</div>
+
 <section id="today">
   <div class="wrap">
     <div class="sec-head">
@@ -691,5 +750,40 @@
       btns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.l === l)); });
     }
     btns.forEach(function (b) { b.addEventListener("click", function () { set(b.dataset.l); }); });
+  })();
+
+  // "Why it matters" slide deck — click a thumbnail to open a lightbox; arrows /
+  // keyboard to move; Esc or a click on the backdrop to close.
+  (function () {
+    var grid = document.getElementById("deck-grid");
+    var lb = document.getElementById("deck-lb");
+    if (!grid || !lb) return;
+    var img = document.getElementById("lb-img");
+    var cnt = document.getElementById("lb-count");
+    var slides = [];
+    for (var i = 1; i <= 18; i++) { slides.push("why-slides/slide-" + (i < 10 ? "0" : "") + i + ".png"); }
+    var cur = 0;
+    function show(i) {
+      cur = (i + slides.length) % slides.length;
+      img.src = slides[cur];
+      img.alt = "Slide " + (cur + 1);
+      cnt.textContent = (cur + 1) + " / " + slides.length;
+    }
+    function open(i) { show(i); lb.classList.add("open"); document.body.style.overflow = "hidden"; }
+    function close() { lb.classList.remove("open"); img.src = ""; document.body.style.overflow = ""; }
+    grid.addEventListener("click", function (e) {
+      var b = e.target.closest(".deck-thumb");
+      if (b) open(parseInt(b.dataset.i, 10));
+    });
+    lb.querySelector(".lb-prev").addEventListener("click", function (e) { e.stopPropagation(); show(cur - 1); });
+    lb.querySelector(".lb-next").addEventListener("click", function (e) { e.stopPropagation(); show(cur + 1); });
+    lb.querySelector(".lb-close").addEventListener("click", close);
+    lb.addEventListener("click", function (e) { if (e.target === lb) close(); });
+    document.addEventListener("keydown", function (e) {
+      if (!lb.classList.contains("open")) return;
+      if (e.key === "Escape") close();
+      else if (e.key === "ArrowLeft") show(cur - 1);
+      else if (e.key === "ArrowRight") show(cur + 1);
+    });
   })();
 </script>
