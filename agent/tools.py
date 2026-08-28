@@ -20,6 +20,7 @@ owner's mailbox and calendar.
 
 from __future__ import annotations
 
+import urllib.parse
 from typing import Optional
 
 from google.adk.tools import ToolContext
@@ -208,6 +209,36 @@ def draft_email(to: str, subject: str, body: str, tool_context: ToolContext) -> 
     }
 
 
+def whatsapp_link(message: str, phone: str, tool_context: ToolContext) -> dict:
+    """Do the scary 10% for WhatsApp: hand them a link that opens WhatsApp with the
+    message already written, so all that is left is picking the contact and pressing send.
+
+    ÍMPETU cannot send WhatsApp, and never should - pressing send is always theirs. Use
+    this when the person wants to send by WhatsApp rather than email: get the text from
+    `drafter` first (like any draft), then pass it here. This needs no Google connection;
+    it just builds the link and stores the text so it is not lost.
+
+    Args:
+        message: the full message text, ready to send, in their voice.
+        phone: recipient's number in international format, digits only (e.g.
+            "5491122334455"), or "" if unknown - the link then opens WhatsApp and lets
+            them choose the contact themselves.
+    """
+    uid = _user_id(tool_context)
+    digits = "".join(ch for ch in (phone or "") if ch.isdigit())
+    base = f"https://wa.me/{digits}" if digits else "https://wa.me/"
+    url = f"{base}?text={urllib.parse.quote(message)}"
+    res = _store.remember(uid, f"wa:{message[:40]}", message, source=SOURCE_MODEL, log=False)
+    _store.log_activity(uid, "whatsapp", "Prepared a WhatsApp message to send", status="done")
+    return {
+        "whatsapp_url": url,
+        "note": ("Opens WhatsApp with the text ready; they pick the contact and press "
+                 "send. ÍMPETU never sends."),
+        "persisted": res.persisted,
+        "warning": res.warning,
+    }
+
+
 def get_today_schedule(tool_context: ToolContext) -> dict:
     """Read what the person already has on their calendar today.
 
@@ -306,6 +337,7 @@ ALL_TOOLS = [
     note_what_worked,
     set_address_preference,
     draft_email,
+    whatsapp_link,
     search_email,
     read_email,
     get_today_schedule,
