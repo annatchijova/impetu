@@ -15,6 +15,14 @@ Google Cloud Console, not a mockup.
   <img src="visual/impetu2.png" alt="ÍMPETU on Google Cloud" width="420">
 </p>
 
+*And ÍMPETU comes back on its own:* `impetu-nudge` runs the proactive check-in
+daily on **Google Cloud Scheduler** — green, no errors, unattended, no human in
+the loop.
+
+<p align="center">
+  <img src="visual/autonomo.png" alt="impetu-nudge live and green on Google Cloud Scheduler" width="900">
+</p>
+
 For an executive-dysfunction brain the plan is never the bottleneck; the activation
 energy to *begin* is. Every part of ÍMPETU exists to lower that energy. It does not
 just chat about what to do next: it negotiates the next step, drafts real outputs,
