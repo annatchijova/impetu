@@ -84,6 +84,21 @@ The **LLM is in the decision path** by design here: Gemini reasons about your si
 and picks the action. Everything consequential — your memory, your drafts, your reminders
 — lives in Google Cloud, not on your machine.
 
+**These are real `gemini-3.5-flash` calls over Vertex AI on Google ADK — no mocks, no
+canned replies.** The live Cloud Run service returns each turn's real `modelVersion`,
+token usage, and thinking signatures. Verify it yourself against the live deployment:
+
+```bash
+BASE=https://impetu-brkvglmi2a-uc.a.run.app
+curl -s -X POST "$BASE/apps/agent/users/user/sessions/s1" \
+  -H 'Content-Type: application/json' -d '{"state":{"user_id":"user"}}'
+curl -s -X POST "$BASE/run" -H 'Content-Type: application/json' -d '{
+  "app_name":"agent","user_id":"user","session_id":"s1",
+  "new_message":{"role":"user","parts":[{"text":"Reply only with: code 7391-ALFA-KILO"}]}}'
+# The response carries "modelVersion":"gemini-3.5-flash" and real usageMetadata;
+# the fresh token proves it was generated, not stored.
+```
+
 ![ÍMPETU architecture — interactive path and proactive loop](docs/architecture.svg)
 
 ```
