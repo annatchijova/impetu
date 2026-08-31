@@ -5,6 +5,16 @@ one thesis:
 
 > **Starting is the hard problem, not planning.**
 
+## Proof it runs on Google Cloud
+
+Deployed on **Cloud Run**, powered by **Vertex AI (Gemini 3.5)** — live in the
+Google Cloud Console, not a mockup.
+
+<p align="center">
+  <img src="visual/impetu1.png" alt="ÍMPETU on Google Cloud" width="420">
+  <img src="visual/impetu2.png" alt="ÍMPETU on Google Cloud" width="420">
+</p>
+
 For an executive-dysfunction brain the plan is never the bottleneck; the activation
 energy to *begin* is. Every part of ÍMPETU exists to lower that energy. It does not
 just chat about what to do next: it negotiates the next step, drafts real outputs,
